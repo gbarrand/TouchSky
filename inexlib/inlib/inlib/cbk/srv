@@ -1,0 +1,552 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_cbk_srv
+#define inlib_cbk_srv
+
+#include "../sg/acbk"
+#include "../sg/entries"
+#include "../sg/base_fch"
+#include "../buf2lines"
+#include "../net/http"
+#include "../xml/srvs"
+#include "../astro"
+#include "../sg/gui_viewer"
+
+namespace inlib {
+namespace cbk {
+
+class srv : public sg::acbk {
+public:
+  static unsigned int action_sites()  {return 1;}
+  static unsigned int action_add()    {return 2;}
+  static unsigned int action_save()   {return 4;}
+protected:
+  static unsigned int action_do_add() {return 3;}
+  static unsigned int action_fch()    {return 5;}
+  static unsigned int action_open()   {return 6;}
+
+  INLIB_CLASS_STRING(failed)
+
+  INLIB_CLASS_STRING(pwd)
+  INLIB_CLASS_STRING(lsd)
+  INLIB_CLASS_STRING(lsf)
+  INLIB_CLASS_STRING(get)
+  INLIB_CLASS_STRING(size)
+public:
+  virtual sg::return_action action() {
+
+    if(m_action==action_sites()) {
+      sg::list* list = new sg::list(m_gv.ttf());
+      m_gv.set_style(*list);
+      list->text_hmargin_factor = 0.8f;
+
+      const std::vector<xml::srv>& srvs = m_srvs._srvs();
+      inlib_vforcit(xml::srv,srvs,it) {
+        std::string _s;
+        _s = (*it).name()+" ";
+        _s += (*it).host()+" ";
+        if(!numas<unsigned int>((*it).port(),_s)){}
+
+        srv* _cbk = new srv(m_gv,m_srvs,action_fch());
+        _cbk->m_srv = *it;
+        list->add(_s,_cbk);
+      }
+  
+      if(!list->items.size()) {
+        delete list;
+        m_gv.map_warn_empty();
+      } else {
+        m_gv.push_list(list);
+      }
+      return sg::return_to_render;
+
+    } else if(m_action==action_add()) {
+      sg::entries* node = new sg::entries(m_gv.ttf());
+
+      node->add_string("name","my computer");
+      node->add_string("host","0.0.0.0");
+      node->add_uint("port",repserv_port());
+
+      srv* _cbk = new srv(m_gv,m_srvs,action_do_add());
+      _cbk->m_entries = node;           
+      node->add_callback(_cbk);
+
+      m_gv.set_style(*node);
+
+      m_gv.push_list(node);
+      return sg::return_to_render;
+
+    } else if(m_action==action_save()) {
+      if(!save_srvs()) {
+        m_gv.map_warn_failed();
+      } else {
+        m_gv.map_warn_done();
+      }
+      return sg::return_to_render;     
+
+    } else if(m_action==action_do_add()) {
+      std::vector<std::string>& vals = m_entries->values.values();
+      if(vals.size()!=3) {
+        m_gv.map_warn("three values expected.");
+        return sg::return_to_render;     
+      }
+      if(vals[0].empty()) { //name
+        m_gv.map_warn("name expected.");
+        return sg::return_to_render;     
+      }
+      if(vals[1].empty()) { //host
+        m_gv.map_warn("host ip address expected.");
+        return sg::return_to_render;     
+      }
+      unsigned int port;
+      if(!to<unsigned int>(vals[2],port)) { //port
+        m_gv.map_warn("unsigned int expected for port.");
+        return sg::return_to_render;     
+      }
+      m_srvs.add_srv(vals[0],vals[1],port);
+
+      m_gv.push_home();
+
+      return sg::return_to_render;
+
+    } else if(m_action==action_fch()) {
+
+      char* bdoc;
+      uint64 ldoc;
+      if(!send_cmd(m_gv,m_srv,s_pwd(),bdoc,ldoc)) {
+        m_gv.map_warn("send_cmd(pwd) failed.");
+        return sg::return_to_render;
+      }
+      std::vector<std::string> dirs;
+      buf2lines(bdoc,dirs);
+      mdel(bdoc);
+
+      file_chooser* fch = new file_chooser(m_gv,m_srv);
+      m_gv.set_style(*fch);
+
+      //fch->exts.add(m_gv.opener().exts());
+      fch->exts.add(".fits");
+      fch->dirs.add(dirs);
+
+      srv* _cbk = new srv(m_gv,m_srvs,action_open());
+      _cbk->m_fch = fch;
+      _cbk->m_srv = m_srv;
+      fch->add_callback(_cbk);
+
+      fch->initialize(m_gv.out());
+
+      m_gv.push_list(fch);
+      return sg::return_to_render;
+
+    } else if(m_action==action_open()) {
+      std::string path = m_fch->value.value();
+    //std::string fmt = m_fch->format.value();
+
+    //::printf("debug : open : \"%s\" \"%s\"\n",path.c_str(),fmt.c_str());
+
+      uint64 sz = 0;
+     {char* bdoc;
+      uint64 ldoc;
+     {std::string cmd;
+      cmd += s_size();
+      cmd += " ";
+      cmd += path;
+      if(!send_cmd(m_gv,m_srv,cmd,bdoc,ldoc)) {
+        m_gv.map_warn("send_cmd(get) failed.");
+        return sg::return_to_render;     
+      }}
+      if( (ldoc>=s_failed().size()) &&
+          (!::strncmp(bdoc,s_failed().c_str(),s_failed().size()))
+        ) {
+        mdel(bdoc);
+        m_gv.map_warn("send_cmd(size) : get failed.");
+        return sg::return_to_render;     
+      }
+      if(!to<uint64>(bdoc,sz,0)){}
+      mdel(bdoc);}
+
+      m_gv.progress().value = 0;
+      m_gv.show_progress();
+      m_gv.win_render();
+      m_gv.num2console<uint64>(sz);
+
+      // target path :
+      std::string data_dir;
+      m_gv.first_data_dir(data_dir);
+      if(data_dir.empty()) {
+        m_gv.map_warn("no data dir.");
+        return sg::return_to_render;     
+      }
+      std::string _path = data_dir;
+      _path += sep();
+      _path += base_name(path);
+      //file::std_remove(_path);
+
+//      char* bdoc;
+//      uint64 ldoc;
+     {std::string cmd;
+      cmd += s_get();
+      cmd += " ";
+      cmd += path;
+      if(!send_cmd_get(m_gv,m_srv,cmd,sz,_path)) {
+        m_gv.hide_progress();
+        m_gv.map_warn("send_cmd(get) failed.");
+        return sg::return_to_render;     
+      }}
+
+      m_gv.hide_progress();
+
+      long ldoc;
+      if(!file::size(_path,ldoc)) {}
+      if((uint64)ldoc!=sz) {
+        m_gv.map_warn("send_cmd(get) : get failed.");
+        return sg::return_to_render;     
+      }
+
+/*
+      if( (ldoc>=s_failed().size()) &&
+          (!::strncmp(bdoc,s_failed().c_str(),s_failed().size()))
+        ) {
+        mdel(bdoc);
+        m_gv.map_warn("send_cmd(get) : get failed.");
+        return sg::return_to_render;     
+      }
+
+      std::string DOCUMENT;
+      if(!tmpname("","inlib_cbk_srv_","",DOCUMENT)) {
+        mdel(bdoc);
+        m_gv.map_warn("tmpname() failed.");
+        return sg::return_to_render;     
+      }
+
+      //NOTE : we don't know yet how to work on a "fits in memory",
+      //       then we pass by a file.
+
+      if(!file::write_bytes(DOCUMENT,bdoc,(size_t)ldoc)) {
+        file::std_remove(DOCUMENT);
+        mdel(bdoc);
+        m_gv.map_warn("can't write file.");
+        return sg::return_to_render;     
+      }
+
+      mdel(bdoc);
+
+      bool done;
+      bool status = m_gv.opener().open(DOCUMENT,file::s_format_guessed(),args(),done);
+
+      m_gv.remove_in_tmp_group<file::holder>(DOCUMENT);
+      m_gv.add_in_tmp_group<file::holder>(DOCUMENT,new file::holder(DOCUMENT));
+
+//   {file::holder* fh = new file::holder(DOCUMENT);
+//    m_gv.scene().add(new sg::holder<file::holder>(fh));}
+
+      if(!status||!done) {
+        file::std_remove(DOCUMENT);
+        m_gv.map_warn_failed();
+        return sg::return_to_render;
+      }
+*/
+/*
+      bool done;
+      if(!m_gv.opener().open(ldoc,bdoc,args(),done)||!done) {
+        mdel(bdoc);
+        m_gv.map_warn_failed();
+        return sg::return_to_render;
+      }
+      mdel(bdoc);
+*/
+
+      //m_gv.show_console(to(ldoc));
+
+      return sg::return_to_render;
+    }
+
+    return sg::return_none;     
+  }
+  virtual sg::bcbk* copy() const {return new srv(*this);}
+public:
+  srv(sg::gui_viewer& a_gv,xml::srvs& a_srvs,unsigned int a_action)
+  :sg::acbk(a_action)
+  ,m_gv(a_gv)
+  ,m_srvs(a_srvs)
+  ,m_entries(0)
+  ,m_fch(0)
+  {}
+  virtual ~srv(){}
+public:
+  srv(const srv& a_from)
+  :sg::acbk(a_from)
+  ,m_gv(a_from.m_gv)
+  ,m_srvs(a_from.m_srvs)
+  ,m_srv(a_from.m_srv)
+  ,m_entries(a_from.m_entries)
+  ,m_fch(a_from.m_fch)
+  {}
+  srv& operator=(const srv& a_from){
+    sg::acbk::operator=(a_from);
+    m_srv = a_from.m_srv;
+    m_entries = a_from.m_entries;
+    m_fch = a_from.m_fch;
+    return *this;
+  }
+protected:
+/*
+  bool load_srvs() {
+    //look for a <app>.srv in the first data dir :
+    std::string data_dir;
+    m_gv.first_data_dir(data_dir);
+    if(data_dir.empty()) return false;
+    std::string _path;
+    _path = data_dir;
+    _path += sep();
+    _path += m_gv.app_name()+".srv";
+    if(!file::exists(_path)) return false;
+    return m_srvs.load_srv_file(m_gv.out(),_path);
+  }
+*/
+  bool save_srvs() {
+    //save srvs in <first_data_dir>/srvs.
+    //(On devices the res_dir is not writeable).
+    std::string data_dir;
+    m_gv.first_data_dir(data_dir);
+    if(data_dir.empty()) return false;
+    std::string _path;
+    _path = data_dir;
+    _path += sep();
+    //_path += m_gv.app_name()+".srv";
+    _path += "srvs";
+    return m_srvs.save_srvs(_path);
+  }
+
+protected:
+
+  static bool send_cmd(sg::gui_viewer& a_gv,
+                       const xml::srv& a_srv,
+                       const std::string& a_cmd,
+                       char*& a_bdoc,uint64& a_ldoc) {
+    net::http http(a_gv.out(),false);
+    if(!http.start(a_srv.host(),a_srv.port())) {
+      //a_gv.map_warn("http.start() failed.");
+      a_bdoc = 0;
+      a_ldoc = 0;
+      return false;
+    }
+    std::string icookie,ocookie;
+    if(!http.POST("cmd="+a_cmd,icookie,a_bdoc,a_ldoc,ocookie)) {
+      //a_gv.map_warn("send command failed.");
+      return false;
+    }
+    //a_gv.set_cookie(ocookie);
+    return true;
+  }
+
+/*
+  static bool send_cmd_sz(sg::gui_viewer& a_gv,
+                          const xml::srv& a_srv,
+                          const std::string& a_cmd,
+                          uint64 a_sz,
+                          char*& a_bdoc,uint64& a_ldoc) {
+    progress http(a_gv.out(),false,a_gv,a_sz);
+    if(!http.start(a_srv.host(),a_srv.port())) {
+      //a_gv.map_warn("http.start() failed.");
+      a_bdoc = 0;
+      a_ldoc = 0;
+      return false;
+    }
+    std::string icookie,ocookie;
+    if(!http.POST("cmd="+a_cmd,icookie,a_bdoc,a_ldoc,ocookie)) {
+      //a_gv.map_warn("send command failed.");
+      return false;
+    }
+    //if(a_gv.cookie().empty()) a_gv.set_cookie(ocookie);
+    return true;
+  }
+*/
+  static bool send_cmd_get(sg::gui_viewer& a_gv,
+                           const xml::srv& a_srv,
+                           const std::string& a_cmd,
+                           uint64 a_sz,
+                           const std::string& a_local) {
+    progress http(a_gv.out(),false,a_gv,a_sz);
+    if(!http.start(a_srv.host(),a_srv.port())) {
+      return false;
+    }
+    std::string icookie,ocookie;
+    if(!http.POST("cmd="+a_cmd,icookie,a_local,ocookie)) {
+      //a_gv.map_warn("send command failed.");
+      return false;
+    }
+    //if(a_gv.cookie().empty()) a_gv.set_cookie(ocookie);
+    return true;
+  }
+
+protected:
+
+  class progress : public net::http {
+    typedef net::http parent;
+  public:
+    virtual bool fetch_cbk(uint64 a_length) {
+      if(!m_size) return false;
+      double fac = double(a_length)/double(m_size);
+      m_gv.progress().value = float(fac);
+      m_gv.win_render();
+      return m_gv.stop_works()?false:true;
+    }
+  public:
+    progress(std::ostream& a_out,bool a_verbose,sg::gui_viewer& a_gv,uint64 a_size)
+    :parent(a_out,a_verbose)
+    ,m_gv(a_gv)
+    ,m_size(a_size)
+    {}
+    virtual ~progress(){}
+  protected:
+    progress(const progress& a_from)
+    :parent(a_from)
+    ,m_gv(a_from.m_gv)
+    ,m_size(a_from.m_size)
+    {}
+    progress& operator=(const progress& a_from){
+      parent::operator=(a_from);
+      m_size = a_from.m_size;
+      return *this;
+    }
+  protected:
+    sg::gui_viewer& m_gv;
+    uint64 m_size;
+  };
+
+  class file_chooser: public sg::base_fch {
+    typedef sg::base_fch parent;
+  public:
+    INLIB_SCLASS(inlib::cbk::srv::file_chooser)
+    virtual void* cast(const std::string& a_class) const {
+      if(void* p = cmp_cast<file_chooser>(this,a_class)) return p;
+      return parent::cast(a_class);
+    }
+  public: //node
+    virtual node* copy() const {return new file_chooser(*this);}
+    virtual const std::string& s_cls() const {return s_class();}
+  public:
+    virtual bool get_dirs(std::ostream&,const std::string& a_path,std::vector<std::string>& a_dirs){
+      char* bdoc;
+      uint64 ldoc;
+     {std::string cmd;
+      cmd += s_lsd();
+      cmd += " ";
+      cmd += a_path;
+      if(!send_cmd(m_gv,m_srv,cmd,bdoc,ldoc)) {
+        a_dirs.clear();
+        return false;
+      }}
+
+      //::printf("debug : lsd : \"%s\"\n",bdoc);
+      if(ldoc) {
+        buf2lines(bdoc,a_dirs);
+      } else {
+        a_dirs.clear();
+      }
+
+      mdel(bdoc);
+
+      std::string sep = "/"; //should be the srv sep !
+      inlib_vforit(std::string,a_dirs,it) *it = a_path+sep+(*it);
+
+      return true;
+    }
+    virtual bool get_files(std::ostream&,const std::string& a_path,const std::string& /*a_ext*/,std::vector<std::string>& a_paths){
+      char* bdoc;
+      uint64 ldoc;
+     {std::string cmd;
+      cmd += s_lsf();
+      cmd += " ";
+      cmd += a_path;
+      if(!send_cmd(m_gv,m_srv,cmd,bdoc,ldoc)) {
+        a_paths.clear();
+        return false;
+      }}
+
+      //::printf("debug : lsf : \"%s\"\n",bdoc);
+
+      if(ldoc) {
+        buf2lines(bdoc,a_paths);
+      } else {
+        a_paths.clear();
+      }
+
+      mdel(bdoc);
+
+      std::string sep = "/"; //should be the srv sep !
+      inlib_vforit(std::string,a_paths,it) *it = a_path+sep+(*it);
+
+      return true;
+    }
+  public:
+    file_chooser(sg::gui_viewer& a_gv,const xml::srv& a_srv)
+    :parent(a_gv.ttf())
+    ,m_gv(a_gv)
+    ,m_srv(a_srv)
+    {}
+    virtual ~file_chooser(){}
+  public:
+    file_chooser(const file_chooser& a_from)
+    :sg::ilist(a_from)
+    ,parent(a_from)
+    ,m_gv(a_from.m_gv)
+    ,m_srv(a_from.m_srv)
+    {}
+    file_chooser& operator=(const file_chooser& a_from){
+      parent::operator=(a_from);
+      m_srv = a_from.m_srv;
+      return *this;
+    }
+  protected:
+    sg::gui_viewer& m_gv;
+    xml::srv m_srv;
+  };
+  
+protected:
+  sg::gui_viewer& m_gv;
+  xml::srvs& m_srvs;
+  xml::srv m_srv;
+  sg::entries* m_entries;
+  sg::base_fch* m_fch;
+};
+
+class srv_data : public sg::pos_data {
+  typedef sg::pos_data parent;
+public:
+  srv_data(xml::srvs& a_srvs,bool a_popup,int a_ex,int a_ey)
+  :parent(a_popup,a_ex,a_ey)
+  ,m_srvs(a_srvs)
+  {}
+  virtual ~srv_data(){}
+public:
+  srv_data(const srv_data& a_from)
+  :parent(a_from)
+  ,m_srvs(a_from.m_srvs)
+  //,m_srv(a_from.m_srv)
+  {}
+  srv_data& operator=(const srv_data& a_from){
+    parent::operator=(a_from);
+    //m_srv = a_from.m_srv;
+    return *this;
+  }
+public:
+  xml::srvs& m_srvs;
+  //xml::srv m_srv;
+};
+
+inline sg::return_action action_srv_main(sg::gui_viewer& a_gv,const srv_data& a_data) {
+  sg::list* list = new sg::list(a_gv.ttf());
+  a_gv.set_style(*list);
+  list->add("known sites",new srv(a_gv,a_data.m_srvs,srv::action_sites()));
+  list->add("add",new srv(a_gv,a_data.m_srvs,srv::action_add()));
+  list->add("save",new srv(a_gv,a_data.m_srvs,srv::action_save()));
+  a_gv.show_widget(a_data,list);
+  return sg::return_to_render;
+}
+
+}}
+
+#endif

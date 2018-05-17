@@ -1,0 +1,164 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_cbk_pimg
+#define exlib_cbk_pimg
+
+#include <inlib/sg/view_evd>
+#include <inlib/sg/view_astro>
+#include <inlib/pimg>
+#include <inlib/buf2lines>
+
+#include "../sg/image_grid"
+//#include "tools"
+
+namespace exlib {
+namespace astro {
+
+inline inlib::sg::return_action _action_pimg(inlib::sg::gui_viewer& a_gv,const std::string& a_name) {
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return inlib::sg::return_none;
+  inlib::sg::view_astro* _vastro = inlib::sg::cast_view_astro(a_gv);
+  if(!_vastro) return inlib::sg::return_none;
+
+  std::string data_dir;
+  a_gv.first_data_dir(data_dir);
+
+  std::vector<std::string> lines;
+
+  std::string host;
+  unsigned int port = 0;
+
+  if((_vastro->host().empty())||(_vastro->host()==inlib::s_local())) {
+    std::string path = data_dir+"/"+a_name+"/params";
+    if(!inlib::file::read(path,lines)) {
+      a_gv.map_warn("params read failed.");
+      return inlib::sg::return_to_render;     
+    }
+  } else {
+    host = _vastro->host();
+    port = _vastro->port();
+
+    std::string sep = "/"; //if repserv running on a UNIX.
+    std::string cmd;
+    cmd += inlib::s_get_from_home();
+    cmd += " ";
+    cmd += sep+"Documents"+sep+"repserv"+sep+a_name+sep+"params";
+    char* doc;inlib::uint64 ldoc;
+    //NOTE : doc should be deleted with [].
+    std::string icookie;
+    std::string ocookie;
+    if(!_vastro->wget().post(host,port,"cmd="+cmd,doc,ldoc,icookie,ocookie)) {
+      a_gv.map_warn("get remote params failed.");
+      return inlib::sg::return_to_render;     
+    }
+    inlib::buf2lines(doc,lines); //it is assumed that doc finished with 0.
+    delete [] doc;
+  }
+
+  float ra,dec;
+  inlib::lut<float> lut;
+  inlib::SOPI::cmap cmap(0);
+  double mn,mx,mean,rms;
+  unsigned int start_level;
+
+  if(!inlib::pimg::get_params(lines,ra,dec,lut,cmap,mn,mx,mean,rms,start_level)) {
+    a_gv.map_warn("params parse failed.");
+    return inlib::sg::return_to_render;     
+  }
+
+  if(!_evd->is_evd()) _evd->create_sg_evd();
+ 
+  double sky_radius = inlib::default_sky_radius();
+
+  inlib::sg::base_camera* _camera = inlib::sg::astro_pimg_camera(a_gv,sky_radius);
+
+  // ortho cam but stay in exam viewer.
+
+  inlib::sg::separator& ssep = _evd->static_sg();
+
+  // image_grid :
+ {inlib::sg::separator* sep = new inlib::sg::separator;
+  ssep.add(sep);
+
+  inlib::sg::infos* infos = new inlib::sg::infos;
+  infos->add_title(a_name);
+  sep->add(infos);
+
+  inlib::sg::rgba* mat = new inlib::sg::rgba;
+//mat->color = inlib::colorf_white();
+  mat->color = inlib::colorf_black(); // (wall : we have black to avoid a white flash when changing level).
+  sep->add(mat);
+
+  //sep->add(new inlib::sg::normal);
+  //sep->add(new inlib::sg::event_dispatcher()); //for image_manip.
+
+  typedef exlib::sg::image_grid grid_t;
+
+  grid_t* _grid = 0;
+  if(host.empty()) {
+    _grid = new grid_t(a_gv,
+                       _vastro->wget(), //simbad
+                       true, //local
+                       _vastro->wget(), //params (then not used).
+                       _vastro->wget(),"",0, //fits (then not used).
+                       data_dir, //used
+                       lut,cmap,mn,mx,mean,rms);
+  } else {
+    _grid = new grid_t(a_gv,
+                       _vastro->wget(), //simbad
+                       false, //repserv
+                       _vastro->wget(), //params
+                       _vastro->wget(),host,port, //fits
+                       data_dir, //not used.
+                       lut,cmap,mn,mx,mean,rms);
+  }
+  _grid->modeling_scale_factor = start_level;
+  _grid->name = a_name;
+  _grid->sky_radius = sky_radius;
+  _grid->stars_radius = inlib::default_stars_radius();
+  sep->add(_grid);
+
+  a_gv.num2console(_grid->modeling_scale_factor.value());}
+
+  bool camera_in_front = true;
+  if(camera_in_front && _camera) {
+    //std::vector<inlib::vec3f> vcs;
+    //inlib::vec3f center;
+    //inlib::radecs_center(radecs,sky_radius,vcs,center);
+    _camera->astro_orientation(ra,dec /*,center*/);
+  }
+  _evd->replace_camera(_camera);
+
+  a_gv.hide_main_menu();
+
+  return inlib::sg::return_to_render;     
+}
+
+#define EXLIB_CBK_ACTION_PIMG(a__name,a__dir) \
+inline inlib::sg::return_action action_##a__name(inlib::sg::gui_viewer& a_gv) {return _action_pimg(a_gv,#a__dir);}
+
+//EXLIB_CBK_ACTION_PIMG(Stripe_82_pyrfits,Stripe_82_pyrfits)
+//EXLIB_CBK_ACTION_PIMG(CFHTLS_1_pyrfits,CFHTLS_1_pyrfits)
+//EXLIB_CBK_ACTION_PIMG(M51_large_pyrfits,M51_large_pyrfits)
+//EXLIB_CBK_ACTION_PIMG(sky_20_pyrfits,sky_20_pyrfits)
+//EXLIB_CBK_ACTION_PIMG(sky_40_pyrfits,sky_40_pyrfits)
+
+EXLIB_CBK_ACTION_PIMG(CFHTLS_1_pfits,CFHTLS_1.pfits)
+EXLIB_CBK_ACTION_PIMG(M51_large_pfits,M51_large.pfits)
+EXLIB_CBK_ACTION_PIMG(sky_40_pfits,sky_40.pfits)
+
+EXLIB_CBK_ACTION_PIMG(CFHTLS_1_phdf5,CFHTLS_1.phdf5)
+EXLIB_CBK_ACTION_PIMG(sky_40_phdf5,sky_40.phdf5)
+
+EXLIB_CBK_ACTION_PIMG(sky_40_proot,sky_40.proot)
+
+#undef EXLIB_CBK_ACTION_PIMG
+
+}}
+
+//exlib_build_use inlib kernel
+//exlib_build_use inlib_glutess zlib freetype
+//exlib_build_use cfitsio hdf5
+
+#endif

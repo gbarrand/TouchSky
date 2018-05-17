@@ -1,0 +1,102 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_exa_hips
+#define exlib_exa_hips
+
+#include <inlib/sg/view_evd>
+
+#include "../sg/hips"
+
+namespace exlib {
+namespace exa {
+
+inline inlib::sg::return_action hips(inlib::sg::gui_viewer& a_gv) {
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return inlib::sg::return_none;
+
+  if(!_evd->is_evd()) {
+    _evd->create_sg_evd();
+    _evd->replace_camera(a_gv.create_3D_camera(2));
+  }
+  //a_gv.set_plane_viewer(true);
+
+  std::string data_dir;
+  a_gv.first_data_dir(data_dir);
+
+  inlib::sg::separator& dsep = _evd->detector_sg();
+  //dsep.clear();
+  
+  inlib::sg::separator* all_sep = new inlib::sg::separator;
+  dsep.add(all_sep);
+
+  inlib::sg::infos* infos = new inlib::sg::infos;
+  infos->add_title("HIPS");
+  all_sep->add(infos);
+
+  //inlib::SOPI::midas_heat _cmap;
+  //inlib::SOPI::col16 _cmap;
+  inlib::SOPI::midas_idl14 _cmap;
+  
+  // /2MASS/J : order 3, tiles 768 :
+  float mn = -32768;
+  float mx = 9090;
+  float mean = 0.718578;
+  float rms = 28.329;
+  //inlib::lut<float> lut(mn,mx,_cmap.size());
+  mn = mean-rms*0.5f;
+  mx = mean+rms*0.5f;
+  inlib::lut<float> lut(mn,mx,_cmap.size());
+
+  //////////////////////////////////////////////////////////
+  /// create scene graph ///////////////////////////////////
+  //////////////////////////////////////////////////////////
+ {inlib::sg::separator* sep = new inlib::sg::separator;
+  all_sep->add(sep);
+
+  sep->add(new inlib::sg::matrix);
+
+  inlib::sg::rgba* mat = new inlib::sg::rgba();
+  mat->color = inlib::colorf_white();
+  sep->add(mat);
+
+  std::string host = "alasky.u-strasbg.fr";
+  unsigned int port = 80;
+
+//  bool local = false;
+  bool local = true;
+
+  exlib::sg::hips* _hips = new exlib::sg::hips(local,data_dir,host,port);
+//_hips->path = "/2MASS/J"; //with a leading /
+//_hips->path = "/DSS/DSSColor"; //with a leading /
+  _hips->path = "/SDSS/DR9/color"; //with a leading /
+//_hips->order = 4; //default is 3.
+  _hips->cut = 0.05f;
+
+  // tiles :
+//  _hips->order = 6;
+//  _hips->cut = 0.001f;
+
+//_hips->auto_lut = inlib::sg::auto_lut_previous;
+//_hips->auto_lut = inlib::sg::auto_lut_min_max;
+  _hips->auto_lut = inlib::sg::auto_lut_mean_rms;
+  _hips->lut = lut;
+  _hips->colors.clear();
+ {for(unsigned int index=0;index<_cmap.size();index++) {
+    const inlib::SOPI::color& _col = _cmap.get_color(index);
+    _hips->colors.add(inlib::colorf(_col.r(),_col.g(),_col.b()));
+  }}
+
+  sep->add(_hips);}
+
+  a_gv.hide_main_menu();
+
+  return inlib::sg::return_to_render;
+}
+
+}}
+
+//exlib_build_use kernel inlib cfitsio zlib freetype
+
+#endif
+

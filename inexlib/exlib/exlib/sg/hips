@@ -1,0 +1,68 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_sg_hips
+#define exlib_sg_hips
+
+#include <inlib/sg/hips>
+
+#include "../fits_image"
+#include "../zlib"
+
+namespace exlib {
+namespace sg {
+
+class hips: public inlib::sg::hips {
+  INLIB_NODE(hips,exlib::sg::hips,inlib::sg::hips)
+protected:
+  virtual bool load_doc(std::ostream& a_out,const char* a_doc,inlib::uint64 a_ldoc,
+                        unsigned int& a_cols,unsigned int& a_rows,char*& a_buffer,
+                        inlib::cfitsio_bitpix_code& a_bitpix) {
+    unsigned int a_ihdu = 1;unsigned int a_slice = 0;
+    unsigned int width,height;
+    size_t sz;
+    int _bitpix;
+    char* _buffer = 0;
+    bool is;
+    if(inlib::is_gzip((unsigned int)a_ldoc,a_doc,is)&&is) {
+      size_t usz = 100*a_ldoc;
+      char* udoc = new char[usz];
+      unsigned int rsz;
+      if(gunzip_buffer(a_out,(unsigned int)a_ldoc,a_doc,(unsigned int)usz,udoc,rsz)) {
+        _buffer = fits_image::read_slice(a_out,rsz,udoc,a_ihdu,a_slice,width,height,sz,_bitpix);
+      }
+      delete [] udoc;
+    } else {
+      _buffer = fits_image::read_slice(a_out,a_ldoc,a_doc,a_ihdu,a_slice,width,height,sz,_bitpix);
+    }
+    if(!_buffer) {
+      a_cols = 0;
+      a_rows = 0;
+      a_buffer = 0;
+      a_bitpix = inlib::byte_img;
+      return false;
+    }
+#ifdef INLIB_MEM
+    inlib::mem::decrement(inlib::s_new().c_str());
+#endif
+    //::printf("debug : tile_image : get buffer %d %d %d : %d\n",sz,width,height,_bitpix);
+    a_buffer = _buffer;
+    a_cols = width;
+    a_rows = height;
+    a_bitpix = inlib::cfitsio_bitpix_code(_bitpix); //it is a cast toward enums.
+    return true;
+  }
+public:
+  hips(bool a_local,const std::string& a_data_dir,const std::string& a_host,unsigned int a_port)
+  :parent(a_local,a_data_dir,a_host,a_port){}
+  virtual ~hips(){}
+public:
+  hips(const hips& a_from):parent(a_from){}
+  hips& operator=(const hips& a_from){parent::operator=(a_from);return *this;}
+};
+
+}}
+
+//exlib_build_use inlib cfitsio zlib
+
+#endif
