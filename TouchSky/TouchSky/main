@@ -128,7 +128,7 @@ protected:
     inlib::sg::add_white_item(*this,*list,"STSCI+SIMBAD",exlib::astro::action_STSCI_SIMBAD);
     inlib::sg::add_white_item(*this,*list,"Some STSCI...",action_some_STSCI);
 
-    inlib::sg::add_white_item(*this,*list,"Some pimg...",action_some_pimg);
+    inlib::sg::add_white_item(*this,*list,"Some pfits...",action_some_pimg);
     /*
     inlib::sg::add_white_item(*this,*list,"add equator",inlib::cbk::action_add_equator);
     inlib::sg::add_white_item(*this,*list,"delete equator",inlib::cbk::action_delete_equator);
