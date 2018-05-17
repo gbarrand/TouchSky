@@ -1,0 +1,13 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file TouchSky.license for terms.
+
+#ifndef TouchSky_TouchSky_version
+#define TouchSky_TouchSky_version
+
+#define TOUCHSKY_MAJOR_VERSION 1
+#define TOUCHSKY_MINOR_VERSION 0
+#define TOUCHSKY_PATCH_VERSION 0
+#define TOUCHSKY_VERSION       "1.0.0"
+#define TOUCHSKY_VERSION_VRP   "v1r0p0"
+
+#endif

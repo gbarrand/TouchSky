@@ -1,0 +1,23 @@
+
+ To build :
+    UNIX> cd <app>/mgr
+    UNIX> ./build  # Cocoa version on macOS, X11 on Linux, win32 on a Windows-10/cygwin.
+  ( UNIX> ./build -v)
+   macOS> ./build -x11 -bin_x11  # to build the X11 version.
+    UNIX> ./build -offscreen -bin_offscreen
+    
+ (here UNIX is for Linux, macOS, Windows-10/cygwin)
+
+ To run :
+    UNIX> cd <app>/mgr
+ the offscreen version :
+    UNIX> ./bin_offscreen/<distrib>/<app>/<version>/bin/<app>
+ the OSX Cocoa version :
+   macOS> open ./bin_sdk_mac/<distrib>/<app>/<version>/<app>.app
+ the OSX X11 version :
+   macOS> ./bin_x11/<distrib>/<app>/<version>/bin/<app>
+ the Linux X11 version :
+   Linux> ./bin_gnu/<distrib>/<app>/<version>/bin/<app>
+ the Windows version :
+  cygwin> ./bin_visual/<distrib>/<app>/<version>/bin/<app>.exe
+

@@ -1,0 +1,14 @@
+# healpix :
+push_home
+clear_static_scene
+exec_menu_item HEALPix of CMB
+do_paint out_healpix.ps
+do_png out_healpix.png
+# M51 :
+push_home
+clear_static_scene
+exec_menu_item Some STSCI...
+exec_menu_item M51
+hide_console
+do_paint
+do_png

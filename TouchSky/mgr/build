@@ -1,0 +1,59 @@
+#!/bin/sh -f
+
+bush_home=../../bush
+
+. ${bush_home}/args
+
+#build_args="${build_args} -app_use_SOPHYA"
+#build_args="${build_args} -app_use_Python"
+
+. ${bush_home}/app_header_use
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+if [ ${build_visual} = "yes" ] ; then cppflags="${cppflags} -bigobj"; fi
+
+# lua :
+cppfiles="${cppfiles} ${exlib_home}/exlib/slua/inlib_swig_lua.cpp"
+
+# Python :
+if [ "${use_Python}" = "yes" ] ; then
+  cppfiles="${cppfiles} ${exlib_home}/exlib/spy/inlib_swig_py.cpp"
+fi
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+
+use_zip=yes
+use_csz=yes
+use_cfitsio=yes
+use_hdf5=yes
+use_wcslib=yes
+use_lua=yes
+use_thread=yes #for Python
+
+. ${bush_home}/use/csz
+. ${bush_home}/use/cfitsio
+. ${bush_home}/use/hdf5
+. ${bush_home}/use/wcslib
+
+. ${bush_home}/use/zip
+. ${bush_home}/use/lua
+. ${bush_home}/use/thread
+
+. ${bush_home}/app_trailer_use
+
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////
+/bin/cp ${exlib_home}/exlib/spy/inlib.py ../comres/.
+#/bin/cp ${exlib_home}/exlib/spy/inlib.py ../Android/res/raw/inlib_py.py
+
+#/////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////
+
+. ${bush_home}/app_trailer
