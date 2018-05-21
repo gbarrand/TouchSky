@@ -1,1 +1,0 @@
-TouchSky permits a 3D visualization of astronomical data.

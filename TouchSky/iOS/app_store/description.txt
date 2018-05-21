@@ -1,3 +1,0 @@
-TouchSky is a scientific astronomical application.
- 
-In French : TouchSky est une application scientifique d'astronomie.

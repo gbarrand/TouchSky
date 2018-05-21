@@ -1,2 +1,0 @@
-TouchSky is a 3D astronomical application to view fits files but also large images stored in a multi resolution format (pyrfits = pyramid of fits) accessible through dedicated servers (one with some pyrfits is publicly available at our laboratory OpenStack system). This application prepares 3D visualisation of images of next generation large CCDs telescope as the LSST one. This application permits also a 3D visualisation of HEALPix large data set by using a dynamical and interactive skullcap spherical system.
- 
