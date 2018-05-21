@@ -1,0 +1,639 @@
+
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := TouchSky
+
+LOCAL_CPP_EXTENSION := .cpp .cc
+
+LOCAL_CPPFLAGS := -fexceptions -frtti  # for SOPHIA headers.
+
+# -DINLIB_MEM
+
+LOCAL_CFLAGS := \
+ -DEXLIB_HAS_GL_VBO\
+ -DAPP_USE_SOPHYA\
+ -DAPP_USE_PYTHON\
+ -DNDEBUG -DPy_BUILD_CORE\
+\
+ -I../../inexlib/inlib\
+ -I../../inexlib/exlib\
+ \
+ -I../../inexlib/ourex/expat/include\
+ \
+ -I../../inexlib/ourex/freetype/include\
+ -I../../inexlib/ourex/freetype/include/freetype\
+ -I../../inexlib/ourex/freetype/src/builds\
+ \
+ -I../../inexlib/ourex/jpeg/jpeg\
+ \
+ -I../../inexlib/ourex/png/png\
+ \
+ -I../../inexlib/ourex/cfitsio/include\
+ \
+ -I../../inexlib/ourex/gl2ps\
+ \
+ -I../../inexlib/ourex/SOPHYA/include\
+ \
+ -I../../inexlib/ourex/wcslib/include/wcslib\
+ \
+ -I../../inexlib/ourex/zlib/include\
+ \
+ -I../../inexlib/ourex/zip/include\
+ \
+ -I../../inexlib/ourex/lua/src\
+ \
+ -I../../inexlib/ourex/Python/include/python2.7\
+ \
+ -I../../inexlib/ourex/hdf5/include
+
+EXPAT_SRC_FILES := \
+ ../../../inexlib/ourex/expat/source/xmlparse.cpp\
+ ../../../inexlib/ourex/expat/source/xmlrole.cpp\
+ ../../../inexlib/ourex/expat/source/xmltok.cpp
+
+FREETYPE_SRC_FILES := \
+ ../../../inexlib/ourex/freetype/src/builds/unix/ftsystem.c\
+ ../../../inexlib/ourex/freetype/src/base/ftdebug.c\
+ ../../../inexlib/ourex/freetype/src/base/ftinit.c\
+ ../../../inexlib/ourex/freetype/src/base/ftbase.c\
+ ../../../inexlib/ourex/freetype/src/base/ftbbox.c\
+ ../../../inexlib/ourex/freetype/src/base/ftbdf.c\
+ ../../../inexlib/ourex/freetype/src/base/ftglyph.c\
+ ../../../inexlib/ourex/freetype/src/base/ftmm.c\
+ ../../../inexlib/ourex/freetype/src/base/ftpfr.c\
+ ../../../inexlib/ourex/freetype/src/base/ftstroke.c\
+ ../../../inexlib/ourex/freetype/src/base/fttype1.c\
+ ../../../inexlib/ourex/freetype/src/base/ftwinfnt.c\
+ ../../../inexlib/ourex/freetype/src/base/ftxf86.c\
+ ../../../inexlib/ourex/freetype/src/gzip/ftgzip.c\
+ ../../../inexlib/ourex/freetype/src/autohint/autohint.c\
+ ../../../inexlib/ourex/freetype/src/bdf/bdf.c\
+ ../../../inexlib/ourex/freetype/src/cache/ftcache.c\
+ ../../../inexlib/ourex/freetype/src/cff/cff.c\
+ ../../../inexlib/ourex/freetype/src/cid/type1cid.c\
+ ../../../inexlib/ourex/freetype/src/lzw/ftlzw.c\
+ ../../../inexlib/ourex/freetype/src/pcf/pcf.c\
+ ../../../inexlib/ourex/freetype/src/pfr/pfr.c\
+ ../../../inexlib/ourex/freetype/src/psaux/psaux.c\
+ ../../../inexlib/ourex/freetype/src/pshinter/pshinter.c\
+ ../../../inexlib/ourex/freetype/src/psnames/psmodule.c\
+ ../../../inexlib/ourex/freetype/src/raster/raster.c\
+ ../../../inexlib/ourex/freetype/src/sfnt/sfnt.c\
+ ../../../inexlib/ourex/freetype/src/smooth/smooth.c\
+ ../../../inexlib/ourex/freetype/src/truetype/truetype.c\
+ ../../../inexlib/ourex/freetype/src/type1/type1.c\
+ ../../../inexlib/ourex/freetype/src/type42/type42.c\
+ ../../../inexlib/ourex/freetype/src/winfonts/winfnt.c
+
+ZIP_SRC_FILES := \
+ ../../../inexlib/ourex/zip/source/zip.c\
+ ../../../inexlib/ourex/zip/source/unzip.c\
+ ../../../inexlib/ourex/zip/source/ioapi.c
+
+JPEG_SRC_FILES := \
+ ../../../inexlib/ourex/jpeg/source/cdjpeg.c\
+ ../../../inexlib/ourex/jpeg/source/jcapimin.c\
+ ../../../inexlib/ourex/jpeg/source/jcapistd.c\
+ ../../../inexlib/ourex/jpeg/source/jccoefct.c\
+ ../../../inexlib/ourex/jpeg/source/jccolor.c\
+ ../../../inexlib/ourex/jpeg/source/jcdctmgr.c\
+ ../../../inexlib/ourex/jpeg/source/jchuff.c\
+ ../../../inexlib/ourex/jpeg/source/jcinit.c\
+ ../../../inexlib/ourex/jpeg/source/jcmainct.c\
+ ../../../inexlib/ourex/jpeg/source/jcmarker.c\
+ ../../../inexlib/ourex/jpeg/source/jcmaster.c\
+ ../../../inexlib/ourex/jpeg/source/jcomapi.c\
+ ../../../inexlib/ourex/jpeg/source/jcparam.c\
+ ../../../inexlib/ourex/jpeg/source/jcphuff.c\
+ ../../../inexlib/ourex/jpeg/source/jcprepct.c\
+ ../../../inexlib/ourex/jpeg/source/jcsample.c\
+ ../../../inexlib/ourex/jpeg/source/jctrans.c\
+ ../../../inexlib/ourex/jpeg/source/jdapimin.c\
+ ../../../inexlib/ourex/jpeg/source/jdapistd.c\
+ ../../../inexlib/ourex/jpeg/source/jdatadst.c\
+ ../../../inexlib/ourex/jpeg/source/jdatasrc.c\
+ ../../../inexlib/ourex/jpeg/source/jdcoefct.c\
+ ../../../inexlib/ourex/jpeg/source/jdcolor.c\
+ ../../../inexlib/ourex/jpeg/source/jddctmgr.c\
+ ../../../inexlib/ourex/jpeg/source/jdhuff.c\
+ ../../../inexlib/ourex/jpeg/source/jdinput.c\
+ ../../../inexlib/ourex/jpeg/source/jdmainct.c\
+ ../../../inexlib/ourex/jpeg/source/jdmarker.c\
+ ../../../inexlib/ourex/jpeg/source/jdmaster.c\
+ ../../../inexlib/ourex/jpeg/source/jdmerge.c\
+ ../../../inexlib/ourex/jpeg/source/jdphuff.c\
+ ../../../inexlib/ourex/jpeg/source/jdpostct.c\
+ ../../../inexlib/ourex/jpeg/source/jdsample.c\
+ ../../../inexlib/ourex/jpeg/source/jdtrans.c\
+ ../../../inexlib/ourex/jpeg/source/jerror.c\
+ ../../../inexlib/ourex/jpeg/source/jfdctflt.c\
+ ../../../inexlib/ourex/jpeg/source/jfdctfst.c\
+ ../../../inexlib/ourex/jpeg/source/jfdctint.c\
+ ../../../inexlib/ourex/jpeg/source/jidctflt.c\
+ ../../../inexlib/ourex/jpeg/source/jidctfst.c\
+ ../../../inexlib/ourex/jpeg/source/jidctint.c\
+ ../../../inexlib/ourex/jpeg/source/jidctred.c\
+ ../../../inexlib/ourex/jpeg/source/jmemansi.c\
+ ../../../inexlib/ourex/jpeg/source/jmemmgr.c\
+ ../../../inexlib/ourex/jpeg/source/jquant1.c\
+ ../../../inexlib/ourex/jpeg/source/jquant2.c\
+ ../../../inexlib/ourex/jpeg/source/jutils.c\
+ ../../../inexlib/ourex/jpeg/source/rdbmp.c\
+ ../../../inexlib/ourex/jpeg/source/rdcolmap.c\
+ ../../../inexlib/ourex/jpeg/source/rdgif.c\
+ ../../../inexlib/ourex/jpeg/source/rdppm.c\
+ ../../../inexlib/ourex/jpeg/source/rdrle.c\
+ ../../../inexlib/ourex/jpeg/source/rdswitch.c\
+ ../../../inexlib/ourex/jpeg/source/rdtarga.c\
+ ../../../inexlib/ourex/jpeg/source/transupp.c\
+ ../../../inexlib/ourex/jpeg/source/wrbmp.c\
+ ../../../inexlib/ourex/jpeg/source/wrgif.c\
+ ../../../inexlib/ourex/jpeg/source/wrppm.c\
+ ../../../inexlib/ourex/jpeg/source/wrrle.c\
+ ../../../inexlib/ourex/jpeg/source/wrtarga.c
+
+PNG_SRC_FILES := \
+ ../../../inexlib/ourex/png/source/png.c\
+ ../../../inexlib/ourex/png/source/pngerror.c\
+ ../../../inexlib/ourex/png/source/pngget.c\
+ ../../../inexlib/ourex/png/source/pngmem.c\
+ ../../../inexlib/ourex/png/source/pngpread.c\
+ ../../../inexlib/ourex/png/source/pngread.c\
+ ../../../inexlib/ourex/png/source/pngrio.c\
+ ../../../inexlib/ourex/png/source/pngrtran.c\
+ ../../../inexlib/ourex/png/source/pngrutil.c\
+ ../../../inexlib/ourex/png/source/pngset.c\
+ ../../../inexlib/ourex/png/source/pngtrans.c\
+ ../../../inexlib/ourex/png/source/pngwio.c\
+ ../../../inexlib/ourex/png/source/pngwrite.c\
+ ../../../inexlib/ourex/png/source/pngwtran.c\
+ ../../../inexlib/ourex/png/source/pngwutil.c
+
+CFITSIO_SRC_FILES := \
+ ../../../inexlib/ourex/cfitsio/src/buffers.c\
+ ../../../inexlib/ourex/cfitsio/src/cfileio.c\
+ ../../../inexlib/ourex/cfitsio/src/checksum.c\
+ ../../../inexlib/ourex/cfitsio/src/compress.c\
+ ../../../inexlib/ourex/cfitsio/src/drvrfile.c\
+ ../../../inexlib/ourex/cfitsio/src/drvrmem.c\
+ ../../../inexlib/ourex/cfitsio/src/editcol.c\
+ ../../../inexlib/ourex/cfitsio/src/edithdu.c\
+ ../../../inexlib/ourex/cfitsio/src/eval_l.c\
+ ../../../inexlib/ourex/cfitsio/src/eval_y.c\
+ ../../../inexlib/ourex/cfitsio/src/eval_f.c\
+ ../../../inexlib/ourex/cfitsio/src/fitscore.c\
+ ../../../inexlib/ourex/cfitsio/src/getcol.c\
+ ../../../inexlib/ourex/cfitsio/src/getcolb.c\
+ ../../../inexlib/ourex/cfitsio/src/getcold.c\
+ ../../../inexlib/ourex/cfitsio/src/getcole.c\
+ ../../../inexlib/ourex/cfitsio/src/getcoli.c\
+ ../../../inexlib/ourex/cfitsio/src/getcolj.c\
+ ../../../inexlib/ourex/cfitsio/src/getcolk.c\
+ ../../../inexlib/ourex/cfitsio/src/getcoll.c\
+ ../../../inexlib/ourex/cfitsio/src/getcols.c\
+ ../../../inexlib/ourex/cfitsio/src/getcolsb.c\
+ ../../../inexlib/ourex/cfitsio/src/getcoluk.c\
+ ../../../inexlib/ourex/cfitsio/src/getcolui.c\
+ ../../../inexlib/ourex/cfitsio/src/getcoluj.c\
+ ../../../inexlib/ourex/cfitsio/src/getkey.c\
+ ../../../inexlib/ourex/cfitsio/src/group.c\
+ ../../../inexlib/ourex/cfitsio/src/grparser.c\
+ ../../../inexlib/ourex/cfitsio/src/histo.c\
+ ../../../inexlib/ourex/cfitsio/src/iraffits.c\
+ ../../../inexlib/ourex/cfitsio/src/modkey.c\
+ ../../../inexlib/ourex/cfitsio/src/putcol.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolb.c\
+ ../../../inexlib/ourex/cfitsio/src/putcold.c\
+ ../../../inexlib/ourex/cfitsio/src/putcole.c\
+ ../../../inexlib/ourex/cfitsio/src/putcoli.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolj.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolk.c\
+ ../../../inexlib/ourex/cfitsio/src/putcoluk.c\
+ ../../../inexlib/ourex/cfitsio/src/putcoll.c\
+ ../../../inexlib/ourex/cfitsio/src/putcols.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolsb.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolu.c\
+ ../../../inexlib/ourex/cfitsio/src/putcolui.c\
+ ../../../inexlib/ourex/cfitsio/src/putcoluj.c\
+ ../../../inexlib/ourex/cfitsio/src/putkey.c\
+ ../../../inexlib/ourex/cfitsio/src/region.c\
+ ../../../inexlib/ourex/cfitsio/src/scalnull.c\
+ ../../../inexlib/ourex/cfitsio/src/swapproc.c\
+ ../../../inexlib/ourex/cfitsio/src/wcssub.c\
+ ../../../inexlib/ourex/cfitsio/src/wcsutil.c\
+ ../../../inexlib/ourex/cfitsio/src/imcompress.c\
+ ../../../inexlib/ourex/cfitsio/src/quantize.c\
+ ../../../inexlib/ourex/cfitsio/src/ricecomp.c\
+ ../../../inexlib/ourex/cfitsio/src/pliocomp.c\
+ ../../../inexlib/ourex/cfitsio/src/fits_hcompress.c\
+ ../../../inexlib/ourex/cfitsio/src/fits_hdecompress.c
+
+WCSLIB_SRC_FILES := \
+ ../../../inexlib/ourex/wcslib/src/cel.c\
+ ../../../inexlib/ourex/wcslib/src/fitshdr.c\
+ ../../../inexlib/ourex/wcslib/src/lin.c\
+ ../../../inexlib/ourex/wcslib/src/log.c\
+ ../../../inexlib/ourex/wcslib/src/prj.c\
+ ../../../inexlib/ourex/wcslib/src/spc.c\
+ ../../../inexlib/ourex/wcslib/src/sph.c\
+ ../../../inexlib/ourex/wcslib/src/spx.c\
+ ../../../inexlib/ourex/wcslib/src/tab.c\
+ ../../../inexlib/ourex/wcslib/src/wcs.c\
+ ../../../inexlib/ourex/wcslib/src/wcsbth.c\
+ ../../../inexlib/ourex/wcslib/src/wcserr.c\
+ ../../../inexlib/ourex/wcslib/src/wcsfix.c\
+ ../../../inexlib/ourex/wcslib/src/wcshdr.c\
+ ../../../inexlib/ourex/wcslib/src/wcspih.c\
+ ../../../inexlib/ourex/wcslib/src/wcsprintf.c\
+ ../../../inexlib/ourex/wcslib/src/wcstrig.c\
+ ../../../inexlib/ourex/wcslib/src/wcsulex.c\
+ ../../../inexlib/ourex/wcslib/src/wcsunits.c\
+ ../../../inexlib/ourex/wcslib/src/wcsutil.c\
+ ../../../inexlib/ourex/wcslib/src/wcsutrn.c
+
+SOPHYA_SRC_FILES := \
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/datatype.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/dvlist.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/fiondblock.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/mutyv.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/ndatablock.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/pexceptions.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/ppersist.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/ppfbinstream.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/ppftpointerio.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/rawstream.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/stsrand.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/timestamp.cc\
+\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/sunitpcst.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/pqnumber.cc\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/randinterf.cc\
+\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/basedtable.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/datatable.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/ntupintf.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/ntuple.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/swppfdtable.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/dtcellrowcont.cc\
+\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitsbntbllineRW.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitsfile.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitshdtable.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitsinoutfile.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitsntuple.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/swfitsdtable.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/basarr.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/tarray.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/tmatrix.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/tvector.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/utilarr.cc\
+\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/fioarr.cc\
+ ../../../inexlib/ourex/SOPHYA/src/TArray/sopemtx.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitsmanager.cc\
+ ../../../inexlib/ourex/SOPHYA/src/FitsIOServer/fitshistos.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/hisprof.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/histos2.cc\
+ ../../../inexlib/ourex/SOPHYA/src/HiStats/histos.cc\
+ ../../../inexlib/ourex/SOPHYA/src/NTools/poly.cc\
+\
+ ../../../inexlib/ourex/SOPHYA/src/BaseTools/gnumd5.c\
+ ../../../inexlib/ourex/SOPHYA/src/SUtils/strutil.c
+
+CSZ_SRC_FILES := \
+ ../../../inexlib/ourex/csz/src/inflate.c
+
+GL2PS_SRC_FILES := \
+ ../../../inexlib/ourex/gl2ps/source/gl2ps.c
+
+# zlib :
+#LOCAL_CFLAGS += -DEXLIB_USE_NATIVE_ZLIB
+#LOCAL_CXXFLAGS += -DEXLIB_USE_NATIVE_ZLIB
+ZLIB_SRC_FILES := \
+ ../../../inexlib/ourex/zlib/source/adler32.c\
+ ../../../inexlib/ourex/zlib/source/compress.c\
+ ../../../inexlib/ourex/zlib/source/crc32.c\
+ ../../../inexlib/ourex/zlib/source/deflate.c\
+ ../../../inexlib/ourex/zlib/source/gzio.c\
+ ../../../inexlib/ourex/zlib/source/infblock.c\
+ ../../../inexlib/ourex/zlib/source/infcodes.c\
+ ../../../inexlib/ourex/zlib/source/inffast.c\
+ ../../../inexlib/ourex/zlib/source/inflate.c\
+ ../../../inexlib/ourex/zlib/source/inftrees.c\
+ ../../../inexlib/ourex/zlib/source/infutil.c\
+ ../../../inexlib/ourex/zlib/source/trees.c\
+ ../../../inexlib/ourex/zlib/source/uncompr.c\
+ ../../../inexlib/ourex/zlib/source/zutil.c
+
+LUA_SRC_FILES := \
+ ../../../inexlib/ourex/lua/src/lapi.c\
+ ../../../inexlib/ourex/lua/src/lauxlib.c\
+ ../../../inexlib/ourex/lua/src/lbaselib.c\
+ ../../../inexlib/ourex/lua/src/lbitlib.c\
+ ../../../inexlib/ourex/lua/src/lcode.c\
+ ../../../inexlib/ourex/lua/src/lcorolib.c\
+ ../../../inexlib/ourex/lua/src/lctype.c\
+ ../../../inexlib/ourex/lua/src/ldblib.c\
+ ../../../inexlib/ourex/lua/src/ldebug.c\
+ ../../../inexlib/ourex/lua/src/ldo.c\
+ ../../../inexlib/ourex/lua/src/ldump.c\
+ ../../../inexlib/ourex/lua/src/lfunc.c\
+ ../../../inexlib/ourex/lua/src/lgc.c\
+ ../../../inexlib/ourex/lua/src/linit.c\
+ ../../../inexlib/ourex/lua/src/liolib.c\
+ ../../../inexlib/ourex/lua/src/llex.c\
+ ../../../inexlib/ourex/lua/src/lmathlib.c\
+ ../../../inexlib/ourex/lua/src/lmem.c\
+ ../../../inexlib/ourex/lua/src/loadlib.c\
+ ../../../inexlib/ourex/lua/src/lobject.c\
+ ../../../inexlib/ourex/lua/src/lopcodes.c\
+ ../../../inexlib/ourex/lua/src/loslib.c\
+ ../../../inexlib/ourex/lua/src/lparser.c\
+ ../../../inexlib/ourex/lua/src/lstate.c\
+ ../../../inexlib/ourex/lua/src/lstring.c\
+ ../../../inexlib/ourex/lua/src/lstrlib.c\
+ ../../../inexlib/ourex/lua/src/ltable.c\
+ ../../../inexlib/ourex/lua/src/ltablib.c\
+ ../../../inexlib/ourex/lua/src/ltm.c\
+ ../../../inexlib/ourex/lua/src/lundump.c\
+ ../../../inexlib/ourex/lua/src/lvm.c\
+ ../../../inexlib/ourex/lua/src/lzio.c
+
+PYTHON_SRC_FILES := \
+ ../../../inexlib/ourex/Python/src/Objects/abstract.c\
+ ../../../inexlib/ourex/Python/src/Objects/boolobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/bufferobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/bytearrayobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/bytes_methods.c\
+ ../../../inexlib/ourex/Python/src/Objects/capsule.c\
+ ../../../inexlib/ourex/Python/src/Objects/cellobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/classobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/cobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/codeobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/complexobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/descrobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/dictobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/enumobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/exceptions.c\
+ ../../../inexlib/ourex/Python/src/Objects/fileobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/floatobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/frameobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/funcobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/genobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/intobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/iterobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/listobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/longobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/memoryobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/methodobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/moduleobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/object.c\
+ ../../../inexlib/ourex/Python/src/Objects/obmalloc.c\
+ ../../../inexlib/ourex/Python/src/Objects/rangeobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/setobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/sliceobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/stringobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/structseq.c\
+ ../../../inexlib/ourex/Python/src/Objects/tupleobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/typeobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/unicodectype.c\
+ ../../../inexlib/ourex/Python/src/Objects/unicodeobject.c\
+ ../../../inexlib/ourex/Python/src/Objects/weakrefobject.c\
+ ../../../inexlib/ourex/Python/src/Parser/acceler.c\
+ ../../../inexlib/ourex/Python/src/Parser/bitset.c\
+ ../../../inexlib/ourex/Python/src/Parser/firstsets.c\
+ ../../../inexlib/ourex/Python/src/Parser/grammar.c\
+ ../../../inexlib/ourex/Python/src/Parser/grammar1.c\
+ ../../../inexlib/ourex/Python/src/Parser/listnode.c\
+ ../../../inexlib/ourex/Python/src/Parser/metagrammar.c\
+ ../../../inexlib/ourex/Python/src/Parser/myreadline.c\
+ ../../../inexlib/ourex/Python/src/Parser/node.c\
+ ../../../inexlib/ourex/Python/src/Parser/parser.c\
+ ../../../inexlib/ourex/Python/src/Parser/parsetok.c\
+ ../../../inexlib/ourex/Python/src/Parser/pgen.c\
+ ../../../inexlib/ourex/Python/src/Parser/tokenizer.c\
+ ../../../inexlib/ourex/Python/src/Python/_warnings.c\
+ ../../../inexlib/ourex/Python/src/Python/asdl.c\
+ ../../../inexlib/ourex/Python/src/Python/ast.c\
+ ../../../inexlib/ourex/Python/src/Python/atof.c\
+ ../../../inexlib/ourex/Python/src/Python/bltinmodule.c\
+ ../../../inexlib/ourex/Python/src/Python/ceval.c\
+ ../../../inexlib/ourex/Python/src/Python/codecs.c\
+ ../../../inexlib/ourex/Python/src/Python/compile.c\
+ ../../../inexlib/ourex/Python/src/Python/dtoa.c\
+ ../../../inexlib/ourex/Python/src/Python/dup2.c\
+ ../../../inexlib/ourex/Python/src/Python/dynload_shlib.c\
+ ../../../inexlib/ourex/Python/src/Python/errors.c\
+ ../../../inexlib/ourex/Python/src/Python/formatter_string.c\
+ ../../../inexlib/ourex/Python/src/Python/formatter_unicode.c\
+ ../../../inexlib/ourex/Python/src/Python/frozen.c\
+ ../../../inexlib/ourex/Python/src/Python/frozenmain.c\
+ ../../../inexlib/ourex/Python/src/Python/future.c\
+ ../../../inexlib/ourex/Python/src/Python/getargs.c\
+ ../../../inexlib/ourex/Python/src/Python/getcompiler.c\
+ ../../../inexlib/ourex/Python/src/Python/getcopyright.c\
+ ../../../inexlib/ourex/Python/src/Python/getopt.c\
+ ../../../inexlib/ourex/Python/src/Python/getplatform.c\
+ ../../../inexlib/ourex/Python/src/Python/getversion.c\
+ ../../../inexlib/ourex/Python/src/Python/graminit.c\
+ ../../../inexlib/ourex/Python/src/Python/import.c\
+ ../../../inexlib/ourex/Python/src/Python/importdl.c\
+ ../../../inexlib/ourex/Python/src/Python/marshal.c\
+ ../../../inexlib/ourex/Python/src/Python/modsupport.c\
+ ../../../inexlib/ourex/Python/src/Python/mysnprintf.c\
+ ../../../inexlib/ourex/Python/src/Python/mystrtoul.c\
+ ../../../inexlib/ourex/Python/src/Python/peephole.c\
+ ../../../inexlib/ourex/Python/src/Python/pyarena.c\
+ ../../../inexlib/ourex/Python/src/Python/pyctype.c\
+ ../../../inexlib/ourex/Python/src/Python/pyfpe.c\
+ ../../../inexlib/ourex/Python/src/Python/pymath.c\
+ ../../../inexlib/ourex/Python/src/Python/pystate.c\
+ ../../../inexlib/ourex/Python/src/Python/pystrcmp.c\
+ ../../../inexlib/ourex/Python/src/Python/pystrtod.c\
+ ../../../inexlib/ourex/Python/src/Python/Python-ast.c\
+ ../../../inexlib/ourex/Python/src/Python/pythonrun.c\
+ ../../../inexlib/ourex/Python/src/Python/random.c\
+ ../../../inexlib/ourex/Python/src/Python/structmember.c\
+ ../../../inexlib/ourex/Python/src/Python/symtable.c\
+ ../../../inexlib/ourex/Python/src/Python/sysmodule.c\
+ ../../../inexlib/ourex/Python/src/Python/thread.c\
+ ../../../inexlib/ourex/Python/src/Python/traceback.c\
+\
+ ../../../inexlib/ourex/Python/src/Modules/_codecsmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/_sre.c\
+ ../../../inexlib/ourex/Python/src/Modules/_weakref.c\
+ ../../../inexlib/ourex/Python/src/Modules/config.c\
+ ../../../inexlib/ourex/Python/src/Modules/errnomodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/gcmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/main.c\
+ ../../../inexlib/ourex/Python/src/Modules/posixmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/pwdmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/signalmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/symtablemodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/threadmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/xxsubtype.c\
+ ../../../inexlib/ourex/Python/src/Modules/zipimport.c\
+ ../../../inexlib/ourex/Python/src/Modules/operator.c\
+ ../../../inexlib/ourex/Python/src/Modules/_localemodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/_functoolsmodule.c\
+\
+ ../../../inexlib/ourex/Python/src/Modules/getpath.c\
+ ../../../inexlib/ourex/Python/src/Modules/getbuildinfo.c\
+\
+ ../../../inexlib/ourex/Python/src/Modules/_math.c\
+ ../../../inexlib/ourex/Python/src/Modules/cmathmodule.c\
+ ../../../inexlib/ourex/Python/src/Modules/mathmodule.c
+
+YACC_SRC_FILES := \
+  ../../../inexlib/exlib/exlib/yacc/cexpr_lexer.cpp\
+  ../../../inexlib/exlib/exlib/yacc/cexpr_eval.cpp
+
+SLUA_SRC_FILES := \
+  ../../../inexlib/exlib/exlib/slua/inlib_swig_lua.cpp
+
+SPY_SRC_FILES := \
+  ../../../inexlib/exlib/exlib/spy/inlib_swig_py.cpp
+
+HDF5_SRC_FILES := \
+ ../../../inexlib/ourex/hdf5/src/H5.c\
+ ../../../inexlib/ourex/hdf5/src/H5A.c\
+ ../../../inexlib/ourex/hdf5/src/H5AC.c\
+ ../../../inexlib/ourex/hdf5/src/H5B.c\
+ ../../../inexlib/ourex/hdf5/src/H5C.c\
+ ../../../inexlib/ourex/hdf5/src/H5D.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dcompact.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dcontig.c\
+ ../../../inexlib/ourex/hdf5/src/H5Defl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dio.c\
+ ../../../inexlib/ourex/hdf5/src/H5Distore.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dmpio.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dselect.c\
+ ../../../inexlib/ourex/hdf5/src/H5Dtest.c\
+ ../../../inexlib/ourex/hdf5/src/H5E.c\
+ ../../../inexlib/ourex/hdf5/src/H5F.c\
+ ../../../inexlib/ourex/hdf5/src/H5FD.c\
+ ../../../inexlib/ourex/hdf5/src/H5Fdbg.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDcore.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDfamily.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDgass.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDlog.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDmpi.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDmpio.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDmpiposix.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDmulti.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDsec2.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDsrb.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDstdio.c\
+ ../../../inexlib/ourex/hdf5/src/H5FDstream.c\
+ ../../../inexlib/ourex/hdf5/src/H5FL.c\
+ ../../../inexlib/ourex/hdf5/src/H5Fmount.c\
+ ../../../inexlib/ourex/hdf5/src/H5FO.c\
+ ../../../inexlib/ourex/hdf5/src/H5FS.c\
+ ../../../inexlib/ourex/hdf5/src/H5Fsfile.c\
+ ../../../inexlib/ourex/hdf5/src/H5Fsuper.c\
+ ../../../inexlib/ourex/hdf5/src/H5G.c\
+ ../../../inexlib/ourex/hdf5/src/H5Gent.c\
+ ../../../inexlib/ourex/hdf5/src/H5Gnode.c\
+ ../../../inexlib/ourex/hdf5/src/H5Gstab.c\
+ ../../../inexlib/ourex/hdf5/src/H5HG.c\
+ ../../../inexlib/ourex/hdf5/src/H5HGdbg.c\
+ ../../../inexlib/ourex/hdf5/src/H5HL.c\
+ ../../../inexlib/ourex/hdf5/src/H5HLdbg.c\
+ ../../../inexlib/ourex/hdf5/src/H5HP.c\
+ ../../../inexlib/ourex/hdf5/src/H5I.c\
+ ../../../inexlib/ourex/hdf5/src/H5MF.c\
+ ../../../inexlib/ourex/hdf5/src/H5MM.c\
+ ../../../inexlib/ourex/hdf5/src/H5O.c\
+ ../../../inexlib/ourex/hdf5/src/H5Oattr.c\
+ ../../../inexlib/ourex/hdf5/src/H5Obogus.c\
+ ../../../inexlib/ourex/hdf5/src/H5Ocont.c\
+ ../../../inexlib/ourex/hdf5/src/H5Odtype.c\
+ ../../../inexlib/ourex/hdf5/src/H5Oefl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Ofill.c\
+ ../../../inexlib/ourex/hdf5/src/H5Olayout.c\
+ ../../../inexlib/ourex/hdf5/src/H5Omtime.c\
+ ../../../inexlib/ourex/hdf5/src/H5Oname.c\
+ ../../../inexlib/ourex/hdf5/src/H5Onull.c\
+ ../../../inexlib/ourex/hdf5/src/H5Opline.c\
+ ../../../inexlib/ourex/hdf5/src/H5Osdspace.c\
+ ../../../inexlib/ourex/hdf5/src/H5Oshared.c\
+ ../../../inexlib/ourex/hdf5/src/H5Ostab.c\
+ ../../../inexlib/ourex/hdf5/src/H5P.c\
+ ../../../inexlib/ourex/hdf5/src/H5Pdcpl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Pdxpl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Pfapl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Pfcpl.c\
+ ../../../inexlib/ourex/hdf5/src/H5Ptest.c\
+ ../../../inexlib/ourex/hdf5/src/H5R.c\
+ ../../../inexlib/ourex/hdf5/src/H5RC.c\
+ ../../../inexlib/ourex/hdf5/src/H5RS.c\
+ ../../../inexlib/ourex/hdf5/src/H5S.c\
+ ../../../inexlib/ourex/hdf5/src/H5Sall.c\
+ ../../../inexlib/ourex/hdf5/src/H5Shyper.c\
+ ../../../inexlib/ourex/hdf5/src/H5SL.c\
+ ../../../inexlib/ourex/hdf5/src/H5Smpio.c\
+ ../../../inexlib/ourex/hdf5/src/H5Snone.c\
+ ../../../inexlib/ourex/hdf5/src/H5Spoint.c\
+ ../../../inexlib/ourex/hdf5/src/H5Sselect.c\
+ ../../../inexlib/ourex/hdf5/src/H5ST.c\
+ ../../../inexlib/ourex/hdf5/src/H5Stest.c\
+ ../../../inexlib/ourex/hdf5/src/H5T.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tarray.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tbit.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tcommit.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tcompound.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tconv.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tcset.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tenum.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tfields.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tfixed.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tfloat.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tinit.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tnative.c\
+ ../../../inexlib/ourex/hdf5/src/H5Toffset.c\
+ ../../../inexlib/ourex/hdf5/src/H5Topaque.c\
+ ../../../inexlib/ourex/hdf5/src/H5Torder.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tpad.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tprecis.c\
+ ../../../inexlib/ourex/hdf5/src/H5TS.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tstrpad.c\
+ ../../../inexlib/ourex/hdf5/src/H5Tvlen.c\
+ ../../../inexlib/ourex/hdf5/src/H5V.c\
+ ../../../inexlib/ourex/hdf5/src/H5Z.c\
+ ../../../inexlib/ourex/hdf5/src/H5Zdeflate.c\
+ ../../../inexlib/ourex/hdf5/src/H5Zfletcher32.c\
+ ../../../inexlib/ourex/hdf5/src/H5Zshuffle.c\
+ ../../../inexlib/ourex/hdf5/src/H5Zszip.c\
+ ../../../inexlib/ourex/hdf5/src/hl/H5IM.c\
+ ../../../inexlib/ourex/hdf5/src/hl/H5LT.c\
+ ../../../inexlib/ourex/hdf5/src/hl/H5TA.c
+
+LOCAL_SRC_FILES := \
+ $(WCSLIB_SRC_FILES)\
+ $(ZIP_SRC_FILES)\
+ $(FREETYPE_SRC_FILES)\
+ $(JPEG_SRC_FILES)\
+ $(ZLIB_SRC_FILES)\
+ $(PNG_SRC_FILES)\
+ $(GL2PS_SRC_FILES)\
+ $(CFITSIO_SRC_FILES)\
+ $(HDF5_SRC_FILES)\
+ $(CSZ_SRC_FILES)\
+ $(EXPAT_SRC_FILES)\
+ $(SOPHYA_SRC_FILES)\
+ $(YACC_SRC_FILES)\
+ $(LUA_SRC_FILES)\
+ $(SLUA_SRC_FILES)\
+ $(PYTHON_SRC_FILES)\
+ $(SPY_SRC_FILES)\
+ ../main.cpp
+
+LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv1_CM
+
+LOCAL_STATIC_LIBRARIES := android_native_app_glue
+
+include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module,android/native_app_glue)
