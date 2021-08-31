@@ -1,0 +1,18 @@
+#!insh
+
+cmd=gui_push_entries -sep=';'
+
+cmd="${cmd} -radec='ra (h:m:s or dec deg);18:0:0'"
+cmd="${cmd} -radec='dec (d:ma:sa or dec deg);0:0:0'"
+
+cmd="${cmd} -double='w (dec deg);0.25'"  # 15.0/60.0 = 15 arcmin.
+cmd="${cmd} -double='h (dec deg);0.25'"  # 15.0/60.0 = 15 arcmin.
+
+cmd="${cmd} -script='. gui_stsci_simbad_ok.insh'"
+
+eval ${cmd}
+
+gui_show_main_menu
+
+unset cmd
+

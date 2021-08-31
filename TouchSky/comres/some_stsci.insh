@@ -1,0 +1,47 @@
+#!insh
+
+cmd=gui_push_list_items
+
+# M-51, NGC-5194, Whirlpool Galaxy.
+# SN2005cs in M51 (from Wikipedia):
+cmd="${cmd} -item='M51:white.jpg:title=M51\nra=13:29:53.4_hms\ndec=47:10:28_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+# M-82, NGC-3034, Cigar galaxy:
+cmd="${cmd} -item='M82:white.jpg:title=M82\nra=09:55:52.2_hms\ndec=69:40:47_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+# M-104, NGC-4594, Sombrero galaxy:
+cmd="${cmd} -item='M104:white.jpg:title=M104\nra=12:39:59.43_hms\ndec=-11:37:23_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+# M-63, NGC-5055, Tournesol galaxy:
+cmd="${cmd} -item='M63:white.jpg:title=M63\nra=13:15:49,28_hms\ndec=42:01:46.5_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+ 
+# M-106, NGC-4258:
+cmd="${cmd} -item='M106:white.jpg:title=M106\nra=12:18:57.5_hms\ndec=47:18:14_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+# M-42, NGC-1976. Orion Nebula:
+#   w = 85.0/60.0 = 1.4167 //85 arcmin
+#   h = 60.0/60.0 = 1.4167 //60 arcmin
+cmd="${cmd} -item='M42:white.jpg:title=M42\nra=5:35:17.3_hms\ndec=-5:23:28_damas\nw=1.4167\nh=1.4167\n. web_get_stsci.insh'"
+
+# NGC-6543, Cat's Eye nebulae:
+cmd="${cmd} -item='NGC-6543:white.jpg:title=NGC-6543\nra=17:58:33.4_hms\ndec=66:37:59_damas\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+# Sagittarius A* : center of our galaxy:
+#   w = 3.0/60.0 = 0.05 //3 arcmin
+#   h = 3.0/60.0 = 0.05 //3 arcmin
+cmd="${cmd} -item='Sgr A*:white.jpg:title=Sgr_A*\nra=17:45:40.045_hms\ndec=-29:00:27.9_damas\nw=0.05\nh=0.05\n. web_get_stsci.insh'"
+
+# Orion : centered on Alnilam (Epsilon Ori) : too long:
+#   w = 2 //STSCI seems to be limited to 2 dec deg.
+#   h = 2
+#cmd="${cmd} -item='Alnilam*:white.jpg:title=Alnilam*\nra=5:36:12.8_hms\ndec=-1:12:6.9_damas\nw=\nh=2\n. web_get_stsci.insh'"
+
+cmd="${cmd} -item='0 90:white.jpg:title=0_90\nra=0\ndec=90\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+cmd="${cmd} -item='270 0:white.jpg:title=270_0\nra=270\ndec=0\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+cmd="${cmd} -item='90 45:white.jpg:title=90_45\nra=90\ndec=45\nw=0.25\nh=0.25\n. web_get_stsci.insh'"
+
+eval ${cmd}
+
+gui_show_main_menu
+
+unset cmd

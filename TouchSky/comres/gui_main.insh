@@ -1,0 +1,77 @@
+#!insh
+
+cmd=gui_push_list_items
+
+cmd="${cmd} -item='files:files.jpg:gui_menu_files'"
+if [ `gui_has_open_panel` = true ] ; then
+  cmd="${cmd} -item='open...:files.jpg:gui_open.insh'"
+fi
+    
+cmd="${cmd} -item='HEALPix of CMB:white.jpg:exa_healpix\ngui_hide_main_menu'"
+cmd="${cmd} -item='exa dc2_rdz_csv.gz:white.jpg:exa_dc2_rdz_csv_gz\ngui_hide_main_menu'"
+
+if [ `sys_os` = emscripten ] ; then
+  url='https://gbarrand.github.io/TouchSky/data/dc2_pos_z_100000.root'
+  cmd="${cmd} -item='wget github dc2_pos_z_100000.root:white.jpg:web_get_file -out=dc2_pos_z.root ${url}'"
+  url='https://gbarrand.github.io/TouchSky/data/dc2_pos_z_3450669.root'
+  cmd="${cmd} -item='wget github dc2_pos_z_3450669.root:white.jpg:web_get_file -out=dc2_pos_z.root ${url}'"
+  unset url
+fi 
+cmd="${cmd} -item='exa doc/dc2_pos_z.root:white.jpg:exa_dc2_pos_z_root\ngui_hide_main_menu'"
+
+##ifdef APP_USE_SOPHYA
+cmd="${cmd} -item='SOPHYA histo:white.jpg:exa_sophya_histo.insh\ngui_hide_main_menu'"
+##endif
+
+cmd="${cmd} -item='NCC-1701:white.jpg:scene_read_bsg -file=star_trek_enterprise.bsg\ngui_hide_main_menu'"
+
+if [ `sys_os` = emscripten ] ; then
+  cmd="${cmd} -item='STSCI+SIMBAD:white.jpg:gui_stsci_simbad.insh'"
+  cmd="${cmd} -item='Some STSCI...:white.jpg:some_stsci.insh'"
+fi 
+
+if [ `sys_os` != emscripten ] ; then
+  cmd="${cmd} -item='Some pfits...:white.jpg:gui_pimgs.insh'"
+fi
+
+cmd="${cmd} -item='startup.insh:white.jpg:startup.insh'"
+
+cmd="${cmd} -item='show plots:plot.jpg:plots_show\ngui_hide_main_menu'"
+cmd="${cmd} -item='hide plots:hide_plot.jpg:plots_hide\ngui_hide_main_menu'"
+cmd="${cmd} -item='plots:set_current_region.jpg:gui_plots.insh'"
+    
+#  //inlib::sg::add_image_item(*this,*list,s_edit_plots(),"edit_plot.jpg",inlib::cbk::action_edit_plot);
+
+cmd="${cmd} -item='anim:object_rotate_left.jpg:camera_start_anim move_rotate_around_focal_right\ngui_hide_main_menu'"
+
+cmd="${cmd} -item='clear dyn sg:clear_event.jpg:scene_clear_dynamic'"
+cmd="${cmd} -item='clear stat sg:clear_static.jpg:scene_clear_static'"
+cmd="${cmd} -item='camera reset:edit_undo.jpg:camera_reset\ngui_hide_main_menu'"
+
+#cmd="${cmd} -item='insh menu:white.jpg:gui_insh_menu.insh'"
+#cmd="${cmd} -item='insh keyboard:white.jpg:gui_insh_keyboard.insh'"
+
+if [ `sys_os` = emscripten ] ; then
+  cmd="${cmd} -item='show terminal:white.jpg:gui_show_terminal'"
+  cmd="${cmd} -item='hide terminal:white.jpg:gui_hide_terminal'"
+fi
+
+cmd="${cmd} -item='export:document_export.jpg:gui_export.insh'"
+
+if [ `sys_os` = emscripten ] ; then
+  cmd="${cmd} -item='import:document_import.jpg:gui_import.insh'"
+fi
+
+cmd="${cmd} -item='colors:white.jpg:gui_show_colors\ngui_show_main_menu'"
+
+cmd="${cmd} -item='utils:tools.jpg:gui_utils.insh'"
+
+cmd="${cmd} -item='about:icon.jpg:about.insh'"
+
+if [ `sys_device_has_stop_app_button` = false ] ; then
+  cmd="${cmd} -item='exit:application_exit.jpg:gui_set_to_exit'"
+fi
+
+eval ${cmd}
+
+unset cmd

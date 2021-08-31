@@ -1,0 +1,23 @@
+#!insh
+
+cmd=gui_push_list_items
+
+#  inlib::sg::view_astro* _vastro = inlib::sg::cast_view_astro(a_gv);
+#  if(_vastro) {
+#    //list->label.value("host : "+_vastro->host());
+#    inlib::sg::add_white_item(a_gv,*list,"Set host ("+_vastro->host()+")",inlib::cbk::action_pimg_host,a_data);
+#  }
+
+cmd="${cmd} -item='CFHTLS_1.pfits:white.jpg:pimg_vis CFHTLS_1.pfits\ngui_hide_main_menu'"
+cmd="${cmd} -item='M51_large.pfits:white.jpg:pimg_vis M51_large.pfits\ngui_hide_main_menu'"
+
+#//  inlib::sg::add_white_item(a_gv,*list,"sky_40.pfits",exlib::astro::action_sky_40_pfits);
+#//  inlib::sg::add_white_item(a_gv,*list,"CFHTLS_1.phdf5",exlib::astro::action_CFHTLS_1_phdf5);
+#//  inlib::sg::add_white_item(a_gv,*list,"sky_40.phdf5",exlib::astro::action_sky_40_phdf5);
+#//  inlib::sg::add_white_item(a_gv,*list,"sky_40.proot",exlib::astro::action_sky_40_proot);
+
+eval ${cmd}
+
+gui_show_main_menu
+
+unset cmd

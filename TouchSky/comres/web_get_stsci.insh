@@ -1,0 +1,18 @@
+
+# should be sourced. Expected variable set:
+#  title
+#  ra
+#  dec
+#  w
+#  h
+
+url=`stsci_request -ra=${ra} -dec=${dec} -w=${w} -h=${h}`
+
+script="scene_add_fits -title=${title} -flat=false -auto_radec=false -ra=${ra} -dec=${dec} out.fits\ngui_hide_main_menu"
+
+cmd="web_get_file -no_warn -out=out.fits -insh='${script}' ${url}"
+
+eval ${cmd}
+
+unset cmd script url
+unset title ra dec w h

@@ -1,0 +1,10 @@
+#!insh
+
+vers=`app_version`
+
+line_0='App: TouchSky'
+line_1="Version: ${vers}"
+line_2='Author: Guy Barrand'
+
+gui_text "${line_0}" "${line_1}" "${line_2}"
+

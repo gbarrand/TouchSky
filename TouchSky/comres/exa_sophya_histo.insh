@@ -1,0 +1,42 @@
+#!insh
+
+numbers=`seq 1 10000`
+
+sophya_histo_create -no_warn -title='The famous normal distribution' -xbins=100 -xmin=-5 -xmax=5 h
+random_create -no_warn -class=rgaussd r
+for i in ${numbers} ; do
+  x=`random_shoot r`
+  sophya_histo_fill -x=${x} h
+done
+
+#///////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////
+
+plots_create
+
+plots_set_grid 1 1
+plots_clear
+
+plots_set_current_plotter 0
+sophya_histo_plot h
+plotter_set_style default
+plotter_set_style exa_hrand
+#plotter_set_field bins_style.0.color dimgrey
+plotter_set_field bins_style.0.color ROOT/Color45
+plotter_set_field bins_style.0.color indianred
+plotter_set_field bins_style.0.modeling boxes
+
+
+#///////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////
+plots_map_viewer
+gui_hide_main_menu
+gui_hide_meta_zone
+
+if [ `app_windowing` = "offscreen" ] ; then
+  scene_write_to_paper -format=inzb_ps out_exa_sophya_histo_insh.ps
+  scene_write_to_paper -format=inzb_png out_exa_sophya_histo_insh.png
+fi
+

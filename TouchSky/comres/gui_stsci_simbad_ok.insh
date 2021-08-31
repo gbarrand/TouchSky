@@ -1,0 +1,12 @@
+
+# must be sourced.
+
+title="${inlib_sg_entries_value_0}_${inlib_sg_entries_value_1}"
+
+ra="${inlib_sg_entries_value_0}_hms"
+dec="${inlib_sg_entries_value_1}_damas"
+
+w="${inlib_sg_entries_value_2}"
+h="${inlib_sg_entries_value_3}"
+
+. web_get_stsci.insh

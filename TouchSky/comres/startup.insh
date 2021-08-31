@@ -1,0 +1,27 @@
+#!insh
+
+scene_set_clear_color white
+
+scene_create -radius=2
+plots_create  # must be after scene_create
+
+#///////////////////////////////////////
+#/// plots: ////////////////////////////
+#///////////////////////////////////////
+plots_show
+
+plots_set_grid 1 1
+plots_clear
+
+plots_set_layout 0.3 0.35 0.3 0.2   # up right.
+
+plots_set_field inlib::sg::plots.border_visible 1
+plots_set_field inlib::sg::plots.border_width   0.02
+plots_set_field inlib::sg::plots.border_height  0.02
+
+plotter_set_field background_style.visible true
+
+plots_hide
+#///////////////////////////////////////
+#///////////////////////////////////////
+#///////////////////////////////////////
