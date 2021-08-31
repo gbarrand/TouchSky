@@ -6,72 +6,50 @@
 
 #include <string>
 
-namespace TouchSky {
-
-class context {
-public:
-  context(const std::string&) {}
-  virtual ~context() {}
-protected:
-  context(const context&){}
-  context& operator=(const context&){return *this;}
-};
-
-}
-
 #include "version"
+#include "actions"
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-
-//Linux : put png first so that png.h comes before any setjmp.h
-#include <exlib/png_opener>
 
 #include <exlib/app/main>
-
-#include <exlib/cbk/wall>
-
-#include <exlib/cfitsio_opener>
-#include <exlib/jpeg_opener>
-
+#include <exlib/fits/cfitsio_opener>
 #include <exlib/sg/rbsg_factories>
-#include <inlib/sg/rbsg_factories>
 #include <exlib/bsg_opener>
-
-#include <exlib/cbk/out>
-#include <exlib/cbk/astro>
-#include <exlib/exa/healpix>
-#include <exlib/exa/hips>
-
-#include <inlib/sg/view_astro>
-#include <inlib/sg/plotarea>
 
 #include <exlib/sg/view_lua>
 extern "C" {
-void luaopen_inlib(lua_State*);
+int luaopen_inlib(lua_State*);
 }
 
 #ifdef APP_USE_PYTHON
-#ifdef ANDROID
-#include <exlib/unzip>
-#endif
+#include <exlib/uzres>
 #include <exlib/sg/view_Python>
 extern "C" {
   void initinlib_swig_py();
 }
 #endif
 
-#include <inlib/cbk/files>
+#include <exlib/insh/app>
+#include <exlib/insh/fits>
+#include <exlib/insh/astro>
+#include <exlib/insh/dc2>
+#ifdef APP_USE_SOPHYA
+#include <exlib/insh/SOPHYA>
+#endif
+
+#include <inlib/hep/load_pdg_table>
+#include <inlib/sg/rbsg_factories>
+#include <inlib/sg/simbad_opener>
+
 #include <inlib/cbk/plots_popup>
 #include <inlib/cbk/healpix_popup>
 #include <inlib/cbk/cfitsio_popup>
-#include <inlib/cbk/astro>
-#include <inlib/cbk/srv>
 
-#include <inlib/sg/view_evd>
-
-#include "actions"
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
 namespace TouchSky {
 
@@ -106,86 +84,52 @@ public:
 #endif
     return parent::cast(a_class);
   }
+public:
+  static const std::string& s_version() {
+    static const std::string s_v(TOUCHSKY_VERSION);
+    return s_v;
+  }
+  static const std::string& s_args_help() {
+    static const std::string s_v;
+    return s_v;
+  }
 protected:
   virtual inlib::sg::node* create_main_menu() {
-    //m_out << "exlib::app::main::create_home_menu : " << std::endl;
-
-    inlib::sg::list* list = new inlib::sg::list(ttf());
-    set_style(*list);
-
-    inlib::sg::add_image_item(*this,*list,inlib::sg::s_files(),"files.jpg",inlib::cbk::action_files);
-    if(has_open_panel()) {
-      inlib::sg::add_image_item(*this,*list,"open...","files.jpg",inlib::sg::action_open_open_panel);
-    }
-
-//    if(m_ftps.size()) {
-//      inlib::sg::add_image_item
-//        (*this,*list,"ftp","location_ftp.jpg",inlib::ftp::action_ftp,inlib::ftp::pos_data(m_ftps,false,0,0));
-//    }
-
-  //inlib::sg::add_image_item(*this,*list,"empty scene","white.jpg",inlib::sg::action_empty_scene_3D);
-
-    inlib::sg::add_white_item(*this,*list,"STSCI+SIMBAD",exlib::astro::action_STSCI_SIMBAD);
-    inlib::sg::add_white_item(*this,*list,"Some STSCI...",action_some_STSCI);
-
-    inlib::sg::add_white_item(*this,*list,"Some pfits...",action_some_pimg);
-    /*
-    inlib::sg::add_white_item(*this,*list,"add equator",inlib::cbk::action_add_equator);
-    inlib::sg::add_white_item(*this,*list,"delete equator",inlib::cbk::action_delete_equator);
-*/
-    inlib::sg::add_white_item(*this,*list,"HEALPix of CMB",exlib::exa::healpix);
-    /*
-    inlib::sg::add_white_item(*this,*list,"HIPS",exlib::exa::hips);
-    */
-    inlib::sg::add_white_item(*this,*list,"NCC-1701",action_NCC_1701);
-    inlib::sg::add_white_item(*this,*list,"show/hide plots",action_show_hide_plots);
-
-/*
-    if(m_srvs._srvs().size()) {
-      inlib::sg::add_image_item(*this,*list,"file on repserv...","white.jpg",
-                                inlib::cbk::action_srv_main,inlib::cbk::srv_data(m_srvs,false,0,0));
-    }
-*/
-
-  //inlib::sg::add_image_item(*this,*list,"clear scene","edit_clear.jpg",inlib::sg::action_clear_scene);
-    inlib::sg::add_image_item(*this,*list,"clear static scene","edit_clear.jpg",inlib::sg::action_clear_static_sg);
-
-    inlib::sg::add_image_item(*this,*list,"reset","edit_undo.jpg",inlib::sg::action_reset_camera);
-
-    if(m_walls._walls().size()) {
-      inlib::sg::add_image_item(*this,*list,"wall","connect_to_wall.jpg",exlib::wall::action_main);
-    }
-
-    inlib::sg::add_image_item(*this,*list,"export","document_export.jpg",exlib::out::action_main);
-    inlib::sg::add_image_item(*this,*list,"utils","tools.jpg",inlib::sg::action_utils);
-
-   {std::vector<std::string> about;
-    about.push_back("App : TouchSky");
-    about.push_back("Version : "+std::string(TOUCHSKY_VERSION));
-    about.push_back("Author : Guy Barrand");
-    inlib::sg::add_image_item(*this,*list,"about","icon.jpg",inlib::sg::action_about,about);}
-
-  //if(inlib::device::is_Android() || !inlib::device::stop_app_button() ){
-    if(!inlib::device::stop_app_button()){
-      inlib::sg::add_image_item(*this,*list,"exit","application_exit.jpg",inlib::sg::action_set_to_exit);
-    }
-
-    return list;
+    insh().exec_line_reset_to_stop("gui_main.insh");
+    return pop_list(false); //important: have false to not delete the popped item.
   }
 
   virtual void create_camenu_items(unsigned int a_nb,float a_wcw,float a_wch,float a_wb,float a_hb) {
     parent::create_camenu_items(a_nb,a_wcw,a_wch,a_wb,a_hb);
 
-    create_main_button(m_out,m_res_dir,parent::m_params,
-                       m_camenu_sep,a_wcw,a_wch,a_wb,a_hb,0,
-                       0,3,"-","-","",
-                       new inlib::sg::gv_cbk(*this,action_dec_modeling_scale));
-    create_main_button(m_out,m_res_dir,parent::m_params,
-                       m_camenu_sep,a_wcw,a_wch,a_wb,a_hb,0,
-                       1,3,"+","+","",
-                       new inlib::sg::gv_cbk(*this,action_inc_modeling_scale));
+    INLIB_VIEW_EVD_ADD_CAMENU_ITEMS
+    
+    if(inlib::device::is_emscripten()) {
+    } else {
+      unsigned int _row = 0;
+      inlib::sg::create_main_button_insh(*this,
+                                         a_wcw,a_wch,a_wb,a_hb,0,
+                                         2,_row++,"static=>",camenu_send_button(),insh(),"scene_send_static");
+
+      inlib::sg::create_main_button(m_out,m_res_dir,parent::m_params,m_image_readers,m_ttf,
+                         m_camenu_sep,a_wcw,a_wch,a_wb,a_hb,0,
+                         2,_row++,"-","-","",
+                         new inlib::sg::gv_cbk(*this,action_dec_modeling_scale));
+
+      inlib::sg::create_main_button(m_out,m_res_dir,parent::m_params,m_image_readers,m_ttf,
+                         m_camenu_sep,a_wcw,a_wch,a_wb,a_hb,0,
+                         2,_row++,"+","+","",
+                         new inlib::sg::gv_cbk(*this,action_inc_modeling_scale));
+    }
+
+    update_camenu_send_button(m_params);
   }
 
+protected:  //insh:
+  static void insh_app_version(inlib::ishell& a_insh,const std::vector<std::string>&) {
+    a_insh.out(TOUCHSKY_VERSION);
+  }
+  EXLIB_INSH_APP_HEADER(main)
 public:
   main(std::ostream& a_out,
        inlib::sg::render_manager& a_gl_mgr,
@@ -206,18 +150,38 @@ public:
 #ifdef APP_USE_PYTHON
   ,parent_Python(*((inlib::sg::viewer*)this),false)
 #endif
+  ,m_pdgs(a_out)
   {
+    //////////////////////////////////////////////////////
+    /// insh: ////////////////////////////////////////////
+    //////////////////////////////////////////////////////
+    if(!inlib::hep::load_default_pdg_table(m_pdgs)) {}
+    
+    insh_app_add_cmds();
+    INLIB_INSH_ADD_ISHELL_ARGS_CMD(insh(),app_version,
+      insh_app_version,
+      "app_version: app_version\n  Print the application version.\n")
+    EXLIB_INSH_FITS_ADDS(insh(),parent::get_omanager())
+    EXLIB_INSH_ASTRO_ADDS(insh(),*this)
+    EXLIB_INSH_DC2_ADDS(insh(),*this)
+#ifdef APP_USE_SOPHYA
+    EXLIB_INSH_SOPHYA_ADDS(insh(),*this)
+#endif
+
+    ////////////////////////////////////////////////////// 
+    //////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////
     m_opener.add_ext("*");
     m_opener.add_ext(inlib::file::s_ext_fits());
-    m_opener.add_ext(inlib::file::s_ext_jpg());
-    m_opener.add_ext(inlib::file::s_ext_png());
 //    m_opener.add_ext(inlib::file::s_ext_scenarios());
 //    m_opener.add_ext(inlib::file::s_ext_slides());
     m_opener.add_ext(inlib::file::s_ext_bsg());
 
     m_opener.add_opener(inlib::file::s_format_fits(),new exlib::cfitsio_opener());
-    m_opener.add_opener(inlib::file::s_format_jpeg(),new exlib::jpeg_opener(a_mem_limit));
-    m_opener.add_opener(inlib::file::s_format_png(),new exlib::png_opener(a_mem_limit));
+
+    if(inlib::device::is_emscripten()) {
+      m_opener.add_opener(inlib::file::s_format_simbad(),new inlib::sg::simbad_opener());
+    }
 
    {inlib::sg::bsg_factories bfac;
     inlib::sg::add_factories(bfac);
@@ -227,68 +191,40 @@ public:
 //    m_opener.add_opener(inlib::file::s_format_scenarios(),new exlib::scenarios_opener(m_opener.openers()));
 //    m_opener.add_opener(inlib::file::s_format_slides(),new exlib::slides_opener(m_opener.openers()));
 
-    m_image_readers.add_reader(inlib::file::s_format_jpeg(),new exlib::jpeg::reader());
-    m_image_readers.add_reader(inlib::file::s_format_png(),new exlib::png::reader());
-
     m_popup_cbks.add(new inlib::cbk::plots_popup(*this));
     m_popup_cbks.add(new inlib::cbk::healpix_popup(*this));
     m_popup_cbks.add(new inlib::cbk::cfitsio_popup(*this));
-
+ 
     ///////////////////////////////////////////////////
-    /// lua ///////////////////////////////////////////
+    /// lua: //////////////////////////////////////////
     ///////////////////////////////////////////////////
     if(!parent_lua::initialize()) {
     } else {
       luaopen_inlib(parent_lua::lua_state());
     }
 
+    ///////////////////////////////////////////////////
+    /// python: ///////////////////////////////////////
+    ///////////////////////////////////////////////////
 #ifdef APP_USE_PYTHON
-#ifdef ANDROID
-    ///////////////////////////////////////////////////
-    /// unfold res lib_py.zip in data dir /////////////
-    ///////////////////////////////////////////////////
-    std::string expected = a_data_dir+inlib::sep()+"lib";
-   {bool is_dir;
-    inlib::dir::is_a(expected,is_dir);
-    if(!is_dir) {
-      std::string file = a_res_dir+inlib::sep()+"lib_py.zip";    
-      if(!exlib::unzip_from(a_out,a_data_dir,file,expected)) {
-        a_out << "main : can't unfold lib_py.zip" << std::endl;
-      }
-    }}
+   {std::string file = a_res_dir+inlib::sep()+"python_2_7_lib_py.zip";    
+    bool permanent = inlib::device::is_iOS()||inlib::device::is_Android()?true:false;
+    if(!exlib::unfold_res_file(m_out,"PYTHONHOME",file,"python_2_7",a_data_dir,a_tmp_dir,permanent,"TouchSky_",m_tmp_dirs)){}}
     //NOTE : in Python/src/Modules/getpath.c, the cpp VERSION must be 2.7.
-    inlib::putenv("PYTHONHOME",a_data_dir); //so that Python find lib/python2.7/lib-dynload
-#else
-    inlib::putenv("PYTHONHOME",a_res_dir); //so that Python find lib/python2.7/lib-dynload
-#endif
-    inlib::putenv("PYTHONPATH",a_res_dir); //to find inlib.py
-
+    inlib::put_env("PYTHONPATH",a_res_dir); //to find inlib.py
     if(!parent_Python::initialize()){}
     initinlib_swig_py();
 #endif
 
-  //camenu_view_all_visible = false; //needed on galaxy images.
-
-    inlib::sg::set_empty_scene_3D(*this,*this);
-    set_meta_zone_had_not_been_shown();
-  //inlib::sg::set_empty_scene_2D(*this,*this);
-  //set_plane_viewer(false);
-
     //////////////////////////////////////////////////////
-    /// view_astro : /////////////////////////////////////
+    /// view_astro: //////////////////////////////////////
     //////////////////////////////////////////////////////
     set_host(inlib::s_local());
     set_port(0);
 
     //////////////////////////////////////////////////////
-    /// plots ////////////////////////////////////////////
     //////////////////////////////////////////////////////
-   {
-  //set_layout_factors(0.32f,-0.32f,0.3f,0.3f);
-    set_layout_factors(0.38f,-0.38f,0.2f,0.2f);
-    add_plots_to_scene();
-    hide_plots();
-    }
+    //////////////////////////////////////////////////////
 
     show_main_menu();
   }
@@ -305,9 +241,15 @@ protected:
 #ifdef APP_USE_PYTHON
   ,parent_Python(a_from)
 #endif
+  ,m_pdgs(a_from.m_pdgs)
   {}
 private:
-  main& operator=(const main&){return *this;}
+  main& operator=(const main& a_from){
+    m_pdgs = a_from.m_pdgs;
+    return *this;
+  }
+protected:  
+  inlib::hep::pdgs m_pdgs;
 };
 
 }
