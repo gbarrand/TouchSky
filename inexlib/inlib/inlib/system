@@ -1,0 +1,38 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_system
+#define inlib_system
+
+//backcomp:
+#include "std_system"
+#include "path_env"
+#include "srep"
+#include "sout"
+#include "file_name"
+
+namespace inlib {
+
+inline bool isenv(const std::string& a_string){return is_env(a_string);} //deprecated.
+inline bool getenv(const std::string& a_string,std::string& a_value){return get_env(a_string,a_value);} //deprecated.
+inline bool putenv(const std::string& a_env,const std::string& a_value){return put_env(a_env,a_value);} //deprecated.
+inline bool rmenv(const std::string& a_env) {return rm_env(a_env);} //deprecated. Still used in OnX.
+inline bool repenv(std::string& a_string) {return rep_env(a_string);} //deprecated.
+
+inline bool check_getenv(std::ostream& a_out,
+                         const std::string& a_new,const std::string& a_old,
+                         std::string& a_env){
+  if(get_env(a_new,a_env)) return true;
+  if(get_env(a_old,a_env)) {
+    a_out << "Environment variable " << sout(a_old) << " is deprecated. Use " << sout(a_new) << " instead." << std::endl;
+    return true;
+  }
+  return false;
+}
+
+
+}
+
+//inlib_build_use kernel
+
+#endif
