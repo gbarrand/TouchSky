@@ -1,4 +1,7 @@
+2.0.0:
+- fully insh scripted, including the GUI central panel.
+- wasm: have a terminal mode. Use 'Show terminal' in the main GUI panel to activate it.
 
-1.0.0 :
+1.0.0:
  - github : May 2018.
 
