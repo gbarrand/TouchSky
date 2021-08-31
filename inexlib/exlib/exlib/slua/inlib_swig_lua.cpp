@@ -14,4 +14,9 @@ extern "C" {
 
 #include "inlib_swig_lua.icc"
 
-//exlib_build_use inlib lua csz kernel
+//exlib_build_use inlib lua kernel socket
+//exlib_build_bigobj
+
+// to read pawdemo.root STAFF tree :
+//exlib_build_use csz
+//exlib_build_cppflags -DINLIB_USE_CSZ

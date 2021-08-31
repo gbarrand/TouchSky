@@ -5,30 +5,31 @@
 #define exlib_sg_tile_image
 
 //NOTE : there is a clash with TBYTE between fitsio.h that defines
-//       it as a cpp macro and WinNT.h that defines it as a typedef.
+//       it as a cpp macro and winnt.h that defines it as a typedef.
 //       As windows.h is indirectly included by inlib/wroot/date through
 //       inlib/pimg_root, this file must be included first.
 #include <inlib/pimg_root>
 
 #include "text_freetype_marker"
 
-#include <inlib/sg/cfitsio_stars>
-#include <inlib/sg/sf_string>
-#include <inlib/sg/sf_vec3f>
-
-#include <inlib/nostream>
-#include <inlib/SDSS>
-#include <inlib/wget>
-#include <inlib/buffer>
-#include <inlib/sep>
-#include <inlib/sg/strings>
-
-#include "../fits_image"
+#include "../fits/fits_image"
 #include "../zlib"
 
 #ifdef EXLIB_SG_TILE_IMAGE_USE_HDF5
 #include "../hdf5/pimg"
 #endif
+
+#include <inlib/sg/cfitsio_stars>
+#include <inlib/sg/sf_string>
+#include <inlib/sg/sf_vec3f>
+
+#include <inlib/nostream>
+#include <inlib/astro/SDSS>
+#include <inlib/wget>
+#include <inlib/buffer>
+#include <inlib/sep>
+#include <inlib/sg/strings>
+#include <inlib/fileis>
 
 //#include <inlib/pimg_root>
 
@@ -55,7 +56,7 @@ public:
   virtual void render(inlib::sg::render_action& a_action) {
     //if(touched()) {
       update_sg(a_action.out(),a_action); //it touches fields.
-    //}    
+    //}
     parent::render(a_action);
   }
 
@@ -77,7 +78,7 @@ public:
   ,data_file()
 
   ,m_fits_local(a_fits_local)
-  ,m_fits_wget(a_fits_wget)  
+  ,m_fits_wget(a_fits_wget)
   ,m_fits_cookie(a_fits_cookie)
   ,m_fits_host(a_fits_host)
   ,m_fits_port(a_fits_port)
@@ -102,7 +103,7 @@ protected:
   ,data_file(a_from.data_file)
 
   ,m_fits_local(a_from.m_fits_local)
-  ,m_fits_wget(a_from.m_fits_wget)  
+  ,m_fits_wget(a_from.m_fits_wget)
   ,m_fits_cookie(a_from.m_fits_cookie)
   ,m_fits_host(a_from.m_fits_host)
   ,m_fits_port(a_from.m_fits_port)

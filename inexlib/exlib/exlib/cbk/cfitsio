@@ -5,20 +5,16 @@
 #define exlib_cbk_cfitsio
 
 //NOTE : there is a clash with TBYTE between fitsio.h that defines
-//       it as a cpp macro and WinNT.h that defines it as a typedef.
+//       it as a cpp macro and winnt.h that defines it as a typedef.
 //       As windows.h is indirectly included by inlib/sys/dir through
 //       inlib/cbk/ntu, this file must be included first.
 
-#include <inlib/sg/astro_tools>
+
+#include "../sg/vis_fits"
+#include "../fits/rcfitsio_ntuple"
+
 #include <inlib/cbk/ntu>
 #include <inlib/sg/healpix>
-#include <inlib/sg/view_evd>
-#include <inlib/sg/view_astro>
-
-#include "../rcfitsio_ntuple"
-#include "../fits_image"
-#include "../wcs"
-#include "../sg/text_freetype_marker"
 
 namespace exlib {
 namespace cbk {
@@ -80,7 +76,7 @@ inline inlib::sg::return_action action_show_keys(inlib::sg::gui_viewer& a_gv,con
 
   ffile.close();
 
-  a_gv.gui_text(ltxt,rtxt);
+  a_gv.gui_scroll_infos(ltxt,rtxt);
 
   return inlib::sg::return_to_render;
 }
@@ -92,96 +88,13 @@ inline inlib::sg::return_action action_IMG_vis(inlib::sg::gui_viewer& a_gv,const
   inlib::sg::view_astro* _vastro = inlib::sg::cast_view_astro(a_gv);
   if(!_vastro) return inlib::sg::return_none;
   if(!_evd->is_evd()) _evd->create_sg_evd();
-  if(!a_gv.scene_camera()) return inlib::sg::return_none;
-
   unsigned int slice;
   if(!inlib::to<unsigned int>(a_widget.values[0],slice)) {
     a_gv.pop_warn(a_data,"slice not a number");
     return inlib::sg::return_to_render;
   }
-
-  unsigned int width,height;
-  size_t sz;
-  int bitpix;
-  char* buffer = fits_image::read_slice(a_gv.out(),a_data.m_file,a_data.m_ihdu,slice,width,height,sz,bitpix);
-  if(!buffer) {
-    a_gv.pop_warn(a_data,"read_slice() failed");
-    return inlib::sg::return_to_render;
-  }
-#ifdef INLIB_MEM
-  inlib::mem::decrement(inlib::s_new().c_str());
-#endif
-
-  std::string scmap = inlib::cbn(inlib::SOPI::colbr128::s_class());
-  inlib::SOPI::cmap _cmap(0);
-  inlib::SOPI::stocmap(scmap,_cmap);
-
-  inlib::sg::separator& dsep = _evd->detector_sg();
-
-//#define EXLIB_CBK_CFITSIO_FLAT
-
-#ifdef EXLIB_CBK_CFITSIO_FLAT
-  inlib::sg::separator* sep = create_sg_cfitsio_flat(buffer,width,height,sz,bitpix,_cmap,*a_gv.scene_camera());
-#else
-  inlib::sg::separator* sep = 0;
-  double radecs[8];
-  if(!wcs::fits_corners(a_data.m_file.c_str(),radecs)) {
-    a_gv.show_console("can't get radecs. Do a flat rep.");
-    sep = create_sg_cfitsio_flat(buffer,width,height,sz,bitpix,_cmap,*a_gv.scene_camera(),true);
-  } else {
-
-    //::printf("debug : radecs (%g,%g) (%g,%g) (%g,%g) (%g,%g)\n",
-    //  radecs[0],radecs[1],radecs[2],radecs[3],radecs[4],radecs[5],radecs[6],radecs[7]);
-
-    double sky_radius = inlib::default_sky_radius();
-
-    inlib::sg::base_camera* _camera = inlib::sg::astro_pimg_camera(a_gv,sky_radius);
-
-    float ra,dec;
-   {std::vector<inlib::vec3f> vcs;
-    inlib::vec3f center;
-    inlib::radecs_center(radecs,sky_radius,vcs,center);
-    float theta,phi;
-    center.theta_phi(theta,phi);
-    ra = phi*inlib::frad2deg();
-    dec = 90.0f-theta*inlib::frad2deg();}
-
-    const inlib::wget& simbad_wget = _vastro->wget();
-
-    const inlib::wget& stars_wget = _vastro->wget();
-
-    const std::string& stars_host = _vastro->host();
-    unsigned int stars_port = _vastro->port();
-    bool stars_local = (stars_host.empty()||(stars_host==inlib::s_local())?true:false);
-
-    std::string stars_dir;
-    a_gv.first_data_dir(stars_dir);
-
-    typedef sg::text_freetype_marker text_t;
-    //typedef sg::text_freetype text_t;
-    text_t* tft = new text_t; //template freetype node for cfitsio_stars.
-  
-    double stars_radius = inlib::default_stars_radius();
-    sep = create_sg_cfitsio_sphere(buffer,width,height,sz,bitpix,_cmap,
-                                   sky_radius,stars_radius,
-                                   ra,dec,radecs,
-                                   simbad_wget,
-                                   stars_local,stars_wget,stars_host,stars_port,stars_dir,
-                                   _vastro->SDSS_catalog(),
-                                   *_camera,*tft);
-				   
-    sep->add(new inlib::sg::holder<text_t>(tft));
-
-    _evd->replace_camera(_camera);
-  }
-#endif
-
-  dsep.add(sep);
-
-  delete [] buffer;
-
+  sg::vis_fits(a_gv,_evd->static_sg(),a_data.m_file,a_data.m_ihdu,slice,false,true,0,0,std::string());
   a_gv.hide_main_menu();
-
   return inlib::sg::return_to_render;
 }
 
@@ -203,7 +116,7 @@ inline inlib::sg::return_action action_TBL_vis(inlib::sg::gui_viewer& a_gv,const
   float _mn,_mx; //before applying lut.
   unsigned int NSIDE;
   bool ORDERING_RING;
-  float* hpixs = 
+  float* hpixs =
     fits_image::HEALPix_BINARY_TBL_read(a_gv.out(),a_data.m_file,a_data.m_ihdu,column,NSIDE,ORDERING_RING,_mn,_mx);
   if(!hpixs) {
     a_gv.pop_warn(a_data,"HEALPix_BINARY_TBL_read() failed");
@@ -215,8 +128,8 @@ inline inlib::sg::return_action action_TBL_vis(inlib::sg::gui_viewer& a_gv,const
     _evd->replace_camera(a_gv.create_2D_camera(2));
   }
   a_gv.set_plane_viewer(true);
-  
-  inlib::sg::separator& dsep = _evd->detector_sg();
+
+  inlib::sg::separator& dsep = _evd->static_sg();
 
   //bool adapt_camera = dsep.empty()?true:false;
 
@@ -269,7 +182,7 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
   cfitsio::key_value(a_gv.out(),a_data.m_file,a_data.m_ihdu,"PIXTYPE",PIXTYPE);
   inlib::strip(PIXTYPE,inlib::both,'\'');
   inlib::strip(PIXTYPE);
-    
+
   if(shdu==s_IMAGE_HDU()) {
 
     // choose slice menu :
@@ -289,7 +202,7 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
       for(unsigned int i=0;i<orders[2];i++){
         if(!inlib::num2s(i,stmp)) {}
         opts.push_back(stmp);
-      }        
+      }
     } else {
       opts.push_back("0");
     }
@@ -298,15 +211,15 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
     inlib::sg::add_callback(a_gv,*_entries,action_IMG_vis,a_data);
 
     a_gv.show_widget(a_data,_entries);
-    
+
   } else if( (shdu==s_BINARY_TBL()) && (PIXTYPE=="HEALPIX") ){
 
     //for example Planck : COM_CompMap_CMB-smica_2048_R1.20.fits
- 
+
 /*
-    std::vector<std::string> names;        
+    std::vector<std::string> names;
     cfitsio::TBL_column_names(a_gv.out(),a_data.m_file,a_data.m_ihdu,names);
-    size_t ncol = names.size(); 
+    size_t ncol = names.size();
     if(ncol!=1) {
       a_gv.pop_warn(a_data,"#columns not one.");
       return inlib::sg::return_to_render;
@@ -315,7 +228,7 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
     inlib::sg::entries* _entries = new inlib::sg::entries(a_gv.ttf());
     a_gv.set_style(*_entries);
 
-   {std::vector<std::string> opts;      
+   {std::vector<std::string> opts;
     std::string stmp;
     for(size_t i=0;i<ncol;i++) {
       if(!inlib::num2s(inlib::uint32(i),stmp)) {}
@@ -348,7 +261,7 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
     _entries->add_opts("proj",inlib::sg::s_1D(),opts);
 
     inlib::ntu_proj* proj = new inlib::ntu_proj;
-    inlib::cbk::choose_proj* _cbk = 
+    inlib::cbk::choose_proj* _cbk =
       new inlib::cbk::choose_proj(a_gv,*proj,*ntu,inlib::cbk::choose_proj::action_main(),a_data);
     _cbk->m_entries = _entries;
     _entries->add_callback(_cbk);
@@ -363,11 +276,11 @@ inline inlib::sg::return_action action_vis(inlib::sg::gui_viewer& a_gv,const _da
     a_gv.add_in_tmp_group<inlib::ntu_proj>(a_data.m_file,proj);
 
   } else { //unknown HDU type.
-    a_gv.out() << "exlib::cbk::cfitsio::action :" 
+    a_gv.out() << "exlib::cbk::cfitsio::action :"
                << " object with "
                << " HDU " << inlib::sout(shdu)
                << " has no visualization."
-               << std::endl;    
+               << std::endl;
     a_gv.pop_warn(a_data,"HDU has no vis");
   }
 

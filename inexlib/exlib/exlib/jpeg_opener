@@ -83,7 +83,7 @@ public:
   jpeg_opener& operator=(const jpeg_opener& a_from){
     m_mem_limit = a_from.m_mem_limit;
     return *this;
-  }  
+  }
 protected:
   static bool open_image_buffer(inlib::sg::gui_viewer& a_gv,
                                 inlib::uint64 a_sz,const char* a_buffer,
@@ -115,7 +115,7 @@ protected:
         //  sw = 2;
         //  sh = sw/aspect;
         //}
-  
+
         unsigned int sw = 2;
         unsigned int sh = 2;
         while(true) {
@@ -123,10 +123,10 @@ protected:
           sw *=2;
           sh *=2;
         }
-  
+
         unsigned int sx = (w-sw)/2;
         unsigned int sy = (h-sh)/2;
-  
+
         buffer = jpegb::read_part(out,(unsigned int)a_sz,a_buffer,sx,sy,sw,sh,w,h,bpp);
       } else {
         buffer = jpegb::read_buffer((unsigned int)a_sz,a_buffer,w,h,bpp);
@@ -134,7 +134,7 @@ protected:
     } else {
       buffer = jpegb::read_buffer((unsigned int)a_sz,a_buffer,w,h,bpp);
     }
-  
+
     if(!buffer) {
       out << "exlib::jpeg_opener::open_image_buffer :"
           << " read failed."
@@ -142,14 +142,14 @@ protected:
       a_gv.map_warn_failed();
       return false;
     }
-    
+
     inlib::img<inlib::byte> img(w,h,bpp,buffer,true);
 
     load_img(a_gv,img,inlib::colorf_lightgrey());
 
     //if(!a_args.is_arg(inlib::sg::s_no_hide_menu())) a_gv.hide_main_menu();
     a_gv.hide_main_menu();
-    
+
     return true;
   }
 

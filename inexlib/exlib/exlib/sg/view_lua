@@ -6,9 +6,7 @@
 
 #include "../lua"
 
-#include <inlib/S_STRING>
 #include <inlib/sg/viewer>
-#include <inlib/pointer>
 
 namespace exlib {
 namespace sg {

@@ -125,8 +125,8 @@ inline unsigned char* read_buffer(size_t a_sz,const char* a_buffer,
     a_width = 0;
     a_bpp = 0;
     return 0;
-  }  
-  
+  }
+
  {png_bytep* row_pointers = new png_bytep[height];
   png_byte* pos = buffer+info_ptr->rowbytes*(height-1);
   for(int y=0;y<height;y++) {
@@ -157,7 +157,7 @@ inline bool infos_buffer(size_t a_sz,const char* a_buffer,
     return 0;
   }
 
-  png_structp png_ptr = 
+  png_structp png_ptr =
     ::png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
   if(!png_ptr) {
     a_width = 0;
@@ -215,7 +215,7 @@ inline unsigned char* read_part(std::ostream& a_out,
         << std::endl;
   a_rw = 0;
   a_rh = 0;
-  a_rbpp = 0;  
+  a_rbpp = 0;
   return 0;
 }
 

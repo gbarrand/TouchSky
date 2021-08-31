@@ -24,7 +24,7 @@ inline bool read(std::ostream& a_out,hid_t a_hid,
   a_h = 0;
   a_buffer = 0;
 
-  hid_t _img = H5Gopen(a_hid,"inlib::img");
+  hid_t _img = exlib_H5Gopen(a_hid,"inlib::img");
   if(_img<0) {
     a_out << "exlib::hdf5::pimg::read : can't open group." << std::endl;
     H5Fclose(a_hid);
@@ -117,7 +117,7 @@ inline bool write(std::ostream& a_out,hid_t a_hid,const inlib::img<TYPE>& a_img)
     return false;
   }
 
-  hid_t himg = H5Gcreate(a_hid,"inlib::img",0);
+  hid_t himg = exlib_H5Gcreate(a_hid,"inlib::img",0);
   if(himg<0) {
     a_out << "exlib::hdf5::pimg::write : can't create group." << std::endl;
     H5Fclose(a_hid);

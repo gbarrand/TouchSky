@@ -4,7 +4,6 @@
 #include <inlib/random>
 #include <inlib/nostream>
 #include <inlib/system>
-#include <inlib/file>
 #include <inlib/get_cout>
 
 //#include <inlib/all>
@@ -13,15 +12,19 @@
 #include <inlib/histo/h3d>
 #include <inlib/histo/p1d>
 #include <inlib/histo/p2d>
+#include <inlib/histo/c2d>
+#include <inlib/histo/c3d>
 
 #include <inlib/waxml/file>
 #include <inlib/rroot/file>
 #include <inlib/rroot/rall>
 
-#include <inlib/vec2>
+#include <inlib/lina/vec2>
 #include <inlib/rcmp>
 #include <inlib/colorfs>
 #include <inlib/lut>
+#include <inlib/lina/box3f>
+#include <inlib/box3d>
 
 #include <inlib/sg/sf_vec>
 #include <inlib/sg/sf_enum>
@@ -50,10 +53,45 @@
 
 #include <inlib/sg/gui_viewer>
 
-#include <inlib/sg/view_plots>
+#include <inlib/sg/data2plots>
+#include <inlib/sg/head_light>
+#include <inlib/sg/plotter_style>
+#include <inlib/picmap>
+namespace inlib {
+namespace sg {
+inline plots* get_sg_plots(gui_viewer& a_gv) {return search_plots<sg::plots>(a_gv);}
+inline void style_from_res(const gui_viewer& a_gv,const std::string& a_path,plotter& a_plotter) { //backcomp for ioda/hrand.py.
+  style_from_res(a_gv.styles(),a_path,a_plotter,a_gv.verbose());
+}
+}}
 
 #include <inlib/sg/polyhedron>
 #include <inlib/sg/infos>
+#include <inlib/sg/set_plotter_camera>
+
+#include <inlib/sg/cone_hat>
+#include <inlib/sg/cube>
+#include <inlib/sg/sphere>
+
+#include <inlib/sg/blend>
+#include <inlib/glprims>
+#include <inlib/sg/atb_vertices>
+#include <inlib/sg/colored_sized_points>
+
+#include <inlib/sg/shade_model>
+
+#include <inlib/wps>
+#include <inlib/sg/zb_action>
+#include <inlib/sg/gl2ps_manager>
+#include <inlib/sg/gl2ps_action>
+
+#include <inlib/sg/write_bsg>
+
+#include <inlib/net/inet_socket>
+#include <inlib/net/sg_client>
+#include <inlib/sg/send>
+
+#include <inlib/spark>
 
 // used to SWIG wrap functions/methods that uses std::string& in arguments :
 namespace inlib {
@@ -61,6 +99,7 @@ class std_string : public std::string {
   typedef std::string parent;
 public:
   std_string():parent(){}
+  std_string(const std::string& a_s):parent(a_s){}
   virtual ~std_string(){}
 public:
   std_string(const std_string& a_from):parent(a_from){}
@@ -68,6 +107,11 @@ public:
 public:
   const std::string& cast() const {return *this;}
 };
+}
+
+namespace inlib {
+inline bool net_host_name(std::ostream& a_out,std_string& a_host) {return net::host_name(a_out,a_host);}
+inline bool net_inet_sip(std::ostream& a_out,const std::string& a_host,std_string& a_sip) {return net::inet_sip(a_out,a_host,a_sip);}
 }
 
 //exlib_build_use skip

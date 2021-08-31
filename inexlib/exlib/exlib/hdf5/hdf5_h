@@ -20,6 +20,7 @@
 #define exlib_H5Gcreate         H5Gcreate
 #define exlib_H5Gopen           H5Gopen
 #define exlib_H5Aiterate        H5Aiterate
+#define exlib_H5free_memory     free
 #else
 #define exlib_H5Dopen           H5Dopen1
 #define exlib_H5Dcreate         H5Dcreate1
@@ -29,6 +30,7 @@
 #define exlib_H5Gcreate         H5Gcreate1
 #define exlib_H5Gopen           H5Gopen1
 #define exlib_H5Aiterate        H5Aiterate1
+#define exlib_H5free_memory     H5free_memory
 #endif
 
 //exlib_build_use hdf5

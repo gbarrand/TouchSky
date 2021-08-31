@@ -6,9 +6,7 @@
 
 #include "../Python"
 
-#include <inlib/S_STRING>
 #include <inlib/sg/viewer>
-#include <inlib/pointer>
 #include <inlib/sout>
 
 namespace exlib {
@@ -47,7 +45,7 @@ public:
     if(m_module) return true; //done
 
     if(!::Py_IsInitialized()) {
-      //FIXME : should pass a copied string. 
+      //FIXME : should pass a copied string.
       // But in fact, do we want to complicate life in passing something ?
       // If passing something, have to restore something at end.
       //::Py_SetProgramName((char*)"exlib_sg_view_Python");
@@ -63,18 +61,18 @@ public:
     m_methods[0].ml_name = m_method_name.c_str();
     m_methods[0].ml_meth = get_viewer_string_pointer;
     m_methods[0].ml_flags = 0;
-    m_methods[0].ml_doc = NULL; 
+    m_methods[0].ml_doc = NULL;
 
     m_methods[1].ml_name = NULL;
     m_methods[1].ml_meth = NULL;
     m_methods[1].ml_flags = 0;
-    m_methods[1].ml_doc = NULL; 
+    m_methods[1].ml_doc = NULL;
 
     // See Include/modsupport.h Python/modsupport.c :
-    std::string module_name("exlib_sg_view_Python");     
+    std::string module_name("exlib_sg_view_Python");
     // WARNING :
     //  The below return a singleton for the whole Python session.
-    // Then passing here twice with the same module_name will return 
+    // Then passing here twice with the same module_name will return
     // the same object without increasing its ob_refcnt.
     //  The second time, the new m_tag replaces the previous one
     // which is then dereferenced (the new one being referenced).
@@ -93,8 +91,8 @@ public:
       m_tag = 0;
       return false;
     }
-    //m_module->ob_refcnt is 1 // the first time. 
-                               // But may be more if having done 
+    //m_module->ob_refcnt is 1 // the first time.
+                               // But may be more if having done
                                // a "import <moduleName>"
                                // and passed here again.
     //m_tag->ob_refcnt is 2

@@ -21,6 +21,6 @@ inline void add_factories(inlib::sg::bsg_factories& a_fac) {
 
 }}
 
-#endif
-
 //exlib_build_use inlib inlib_glutess freetype zlib
+
+#endif
