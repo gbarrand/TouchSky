@@ -22,6 +22,7 @@ if [ ${build_app} = "yes" ] ; then
   use_archive=yes
   . ${bush_home}/preplib
 
+  app=lua
   app_exe=lua
   app_src=./apps/lua.c
   . ${bush_home}/application

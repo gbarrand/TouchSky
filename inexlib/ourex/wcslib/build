@@ -45,6 +45,7 @@ if [ ${build_app} = "yes" ] ; then
     app_src=${item}
     name=`basename ${item}`
     name=`echo ${name} | sed -e 's:\.c::g'`
+    app="${name}"
     app_exe="${name}"
     . ${bush_home}/application
   done

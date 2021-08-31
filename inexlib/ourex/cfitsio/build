@@ -5,14 +5,14 @@ bush_home=../../../bush
 . ${bush_home}/args
 . ${bush_home}/ourex_header
 
-if [ `uname` = "Linux" ] ; then
-  ccflags="${ccflags} -Wno-unused-result"
-fi
-
 if [ `uname` = "Darwin" -o `uname` = "Linux" ] ; then
-  # for exlib/apps/cfitsio_pyrfits_merge :
-  ccflags="${ccflags} -D_REENTRANT"
-  use_thread=yes
+  if [ ${build_visual} = "yes" ] ; then # Microsoft Linux.
+    echo dummy > /dev/null
+  else	
+    # for exlib/apps/cfitsio_pyrfits_merge :
+    ccflags="${ccflags} -D_REENTRANT"
+    use_thread=yes
+  fi
 fi
 
 . ${bush_home}/ourex_generic
@@ -31,6 +31,7 @@ if [ ${build_app} = "yes" ] ; then
 
   objs=
   app_src=./testprog.c
+  app=testprog
   app_exe=testprog
   . ${bush_home}/application
 

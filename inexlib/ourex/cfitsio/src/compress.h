@@ -67,7 +67,7 @@ typedef unsigned long  ulg;
 
 #define tab_suffix window
 #define tab_prefix prev    /* hash link (see deflate.c) */
-#define head (prev+WSIZE)  /* hash head (see deflate.c) */
+#define head_hash (prev+WSIZE)  /* hash head (see deflate.c) */  /*G.Barrand : android-ndk-r17 : head => head_hash.*/
 
 #define	PACK_MAGIC     "\037\036" /* Magic header for packed files */
 #define	GZIP_MAGIC     "\037\213" /* Magic header for gzip files, 1F 8B */

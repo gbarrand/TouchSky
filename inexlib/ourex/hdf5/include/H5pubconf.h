@@ -18,6 +18,7 @@
 #define H5_SIZEOF_DOUBLE 8
 
 /* //////////////////////////////////////////////////////// */
+/* /// __APPLE__ : //////////////////////////////////////// */
 /* //////////////////////////////////////////////////////// */
 #if defined(__APPLE__) 
 
@@ -27,35 +28,78 @@
 #include <TargetConditionals.h>
 
 #if TARGET_OS_IPHONE
-/* iPad-1 is 32 bits and little endian. */
-#define H5_OUREX_LE_32
-#elif defined(__x86_64__)
-#define H5_OUREX_LE_64
 
-#define H5_SIZEOF_INT_FAST16_T 2
-#define H5_SIZEOF_INT_FAST32_T 4
+#if defined(TARGET_RT_64_BIT) && (TARGET_RT_64_BIT == 1) 
+#define H5_OUREX_64
+#else
+#define H5_OUREX_32
+#endif
+
+#else /*macOS*/
+
+#if defined(TARGET_RT_64_BIT) && (TARGET_RT_64_BIT == 1) 
+#define H5_OUREX_64
+/* Do we need the four below lines ? If needed, inlib/app/sizeof.cpp can help with that.
+#define H5_SIZEOF_INT_FAST16_T  2
+#define H5_SIZEOF_INT_FAST32_T  4
 #define H5_SIZEOF_UINT_FAST16_T 2
 #define H5_SIZEOF_UINT_FAST32_T 4
-
+*/
 #define H5_HAVE_INTTYPES_H 1
-#define H5_HAVE_THREADSAFE 1   /*add H5TS.c*/
-#else /*32 bits*/
-#if defined(__POWERPC__) || defined(__ppc__)
-/*Big endian*/
-#error "ourex/hdf5/include/H5pubconf.h : unknown __APPLE__ platform."
 #else
-#define H5_OUREX_LE_32
+#define H5_OUREX_32
 #endif
 #define H5_HAVE_THREADSAFE 1   /*add H5TS.c*/
+
+#if defined(TARGET_RT_BIG_ENDIAN)  && (TARGET_RT_BIG_ENDIAN == 1) 
+#error "ourex/hdf5/include/H5pubconf.h : __APPLE__ platform not handled."
 #endif
 
+#endif /*TARGET_OS_IPHONE*/
+
+/* //////////////////////////////////////////////////////// */
+/* /// ANDROID : ////////////////////////////////////////// */
+/* //////////////////////////////////////////////////////// */
 #elif defined(ANDROID)
+
+/* Samsung Galaxy Note 8 is 64 bits.*/
 /* Samsung Galaxy S1 is 32 bits and little endian. */
-#define H5_OUREX_LE_32
+
+#if defined(__arm__)
+  #define H5_OUREX_32
+/*
+  #if defined(__ARM_ARCH_7A__)
+    #if defined(__ARM_NEON__)
+      #if defined(__ARM_PCS_VFP)
+      #else
+      #endif
+    #else
+      #if defined(__ARM_PCS_VFP)
+      #else
+      #endif
+    #endif
+  #else
+  #endif
+*/
+#elif defined(__i386__)
+#define H5_OUREX_32
+#elif defined(__x86_64__)
+#define H5_OUREX_64
+#elif defined(__mips64)  /* mips64el-* toolchain defines __mips__ too */
+#define H5_OUREX_64
+#elif defined(__mips__)
+#define H5_OUREX_32
+#elif defined(__aarch64__)
+#define H5_OUREX_64
+#else
+#error "ourex/hdf5/include/H5pubconf.h : unknown ANDROID platform."
+#endif
+
 #define H5_HAVE_UNISTD_H 1
 #define H5_HAVE_STDINT_H 1
 
 /* //////////////////////////////////////////////////////// */
+/* /// __linux__ : //////////////////////////////////////// */
 /* //////////////////////////////////////////////////////// */
 #elif defined(__linux__)
 
@@ -66,7 +110,7 @@
 
 #if defined(__x86_64__)
 /*#elif defined(_LP64) ??? */
-#define H5_OUREX_LE_64
+#define H5_OUREX_64
 
 #define H5_SIZEOF_INT_FAST16_T 8
 #define H5_SIZEOF_INT_FAST32_T 8
@@ -74,10 +118,11 @@
 #define H5_SIZEOF_UINT_FAST32_T 8
 
 #else
-#define H5_OUREX_LE_32
+#define H5_OUREX_32
 #endif
 
 /* //////////////////////////////////////////////////////// */
+/* /// _MSC_VER : ///////////////////////////////////////// */
 /* //////////////////////////////////////////////////////// */
 #elif defined(_MSC_VER)
 
@@ -190,15 +235,50 @@ typedef int ssize_t;
 /*#define H5_HAVE_THREADSAFE 1*/   /*add H5TS.c*/
 
 /* //////////////////////////////////////////////////////// */
+/* /// CYGWIN and GNU : /////////////////////////////////// */
+/* //////////////////////////////////////////////////////// */
+#elif (defined(__CYGWIN__) && defined(__GNUC__))
+
+#define H5_HAVE_UNISTD_H 1
+#define H5_HAVE_STDINT_H 1
+
+#define H5_HAVE_THREADSAFE 1   /*add H5TS.c*/
+
+#if defined(__x86_64__)
+/*#elif defined(_LP64) ??? */
+#define H5_OUREX_64
+
+#define H5_SIZEOF_INT_FAST16_T 8
+#define H5_SIZEOF_INT_FAST32_T 8
+#define H5_SIZEOF_UINT_FAST16_T 8
+#define H5_SIZEOF_UINT_FAST32_T 8
+
+#else
+#define H5_OUREX_32
+#endif
+
+/* //////////////////////////////////////////////////////// */
+/* /// EMSCRIPTEN : /////////////////////////////////////// */
+/* //////////////////////////////////////////////////////// */
+#elif defined(EMSCRIPTEN)
+
+#define H5_OUREX_32
+//#define H5_OUREX_64
+
+#define H5_HAVE_UNISTD_H 1
+#define H5_HAVE_STDINT_H 1
+
+/* //////////////////////////////////////////////////////// */
+/* /// unknown platform : ///////////////////////////////// */
 /* //////////////////////////////////////////////////////// */
 #else
 #error "ourex/hdf5/include/H5pubconf.h : unknown platform."
 #endif
 
 /* //////////////////////////////////////////////////////// */
+/* /// common : /////////////////////////////////////////// */
 /* //////////////////////////////////////////////////////// */
-/* //////////////////////////////////////////////////////// */
-#if defined(H5_OUREX_LE_32)
+#if defined(H5_OUREX_32)
 #define H5_SIZEOF_LONG 4
 #define H5_SIZEOF_LONG_DOUBLE 12
 #define H5_SIZEOF_LONG_LONG 8
@@ -239,9 +319,9 @@ typedef int ssize_t;
 #define H5_SIZEOF___INT64 0
 
 #define H5_PRINTF_LL_WIDTH "ll"
-#endif /*H5_OUREX_LE_32*/
+#endif /*H5_OUREX_32*/
 
-#if defined(H5_OUREX_LE_64)
+#if defined(H5_OUREX_64)
 #define H5_SIZEOF_LONG 8
 #define H5_SIZEOF_LONG_DOUBLE 16
 #define H5_SIZEOF_LONG_LONG 8
@@ -278,7 +358,7 @@ typedef int ssize_t;
 #define H5_SIZEOF___INT64 0
 
 #define H5_PRINTF_LL_WIDTH "l"
-#endif /*H5_OUREX_LE_64*/
+#endif /*H5_OUREX_64*/
 
 /* //////////////////////////////////////////////////////// */
 /* /// Seems mendatory to compile : /////////////////////// */

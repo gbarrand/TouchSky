@@ -165,6 +165,9 @@ extern int Fitsio_Pthread_Status;
 #elif defined(__arm64__) /*G.Barrand : iOS.*/
 #define BYTESWAPPED TRUE
 
+#elif defined(__aarch64__) /*G.Barrand : Android 64 bits.*/
+#define BYTESWAPPED TRUE
+
 #elif defined(__arm__)
 
 /* This assumes all ARM are little endian.  In the future, it might be  */
@@ -189,6 +192,10 @@ extern int Fitsio_Pthread_Status;
 #define BYTESWAPPED FALSE
 #endif
  
+#elif defined(EMSCRIPTEN)  /*G.Barrand : wasm.*/
+
+#define BYTESWAPPED TRUE
+
 #else
 
 /*  assume all other machine uses the same IEEE formats as used in FITS files */

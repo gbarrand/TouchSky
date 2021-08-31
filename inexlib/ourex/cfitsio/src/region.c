@@ -111,7 +111,7 @@ int fits_read_ascii_region( const char *filename,
          } else {
             currLine = currLoc;
          }
-         fgets( currLine+lineLen, allocLen+1, rgnFile );
+         if(fgets( currLine+lineLen, allocLen+1, rgnFile )==NULL) {} /*G.Barrand : ubuntu : if() to rm warning.*/
          allocLen += allocLen;
          lineLen  += strlen(currLine+lineLen);
       }

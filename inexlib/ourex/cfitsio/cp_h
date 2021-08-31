@@ -1,6 +1,7 @@
 #!/bin/sh -f
 
-from=/usr/local/cfitsio/3.25/build/cfitsio
+#from=/usr/local/cfitsio/3.25/build/cfitsio
+from=../../ourex_zips/cfitsio
 
 cp ${from}/fitsio2.h ./src/.
 cp ${from}/group.h ./src/.

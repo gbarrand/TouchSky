@@ -77,11 +77,13 @@ if [ ${build_app} = "yes" ] ; then
   fi
 
   objs=
+  app=H5detect
   app_exe=H5detect
   app_src=./applications/H5detect.c
   . ${bush_home}/application
 
   objs=
+  app=h5_array_compound
   app_exe=h5_array_compound
   app_src=./examples/h5_array_compound.c
   . ${bush_home}/application

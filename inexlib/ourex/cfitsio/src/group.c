@@ -5440,7 +5440,7 @@ int fits_get_cwd(char *cwd,  /* IO current working directory string */
     Good old getcwd() seems to work with all other platforms
   */
 
-  getcwd(buff,FLEN_FILENAME);
+  if(getcwd(buff,FLEN_FILENAME)==NULL) {} /*G.Barrand : ubuntu : if() to rm warning.*/
 
 #endif
 

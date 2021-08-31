@@ -1191,7 +1191,7 @@ ulg crc_32_tab[] = {
 /* local ush left[2 * NC - 1]; */
 /* local ush right[2 * NC - 1]; */
 #define left  prev
-#define right head
+#define right head_hash
 #if NC > (1<<(BITS-2))
     error cannot overlay left+right and prev
 #endif
@@ -3557,8 +3557,8 @@ local  void check_match OF((IPos start, IPos match, int length));
  */
 #define INSERT_STRING(s, match_head) \
    (UPDATE_HASH(ins_h, window[(s) + MIN_MATCH-1]), \
-    prev[(s) & WMASK] = match_head = head[ins_h], \
-    head[ins_h] = (s))
+    prev[(s) & WMASK] = match_head = head_hash[ins_h], \
+    head_hash[ins_h] = (s))
 
 /* ===========================================================================
  * Initialize the "longest match" routines for a new file
@@ -3574,9 +3574,9 @@ void lm_init (pack_level, flags)
 
     /* Initialize the hash table. */
 #if defined(MAXSEG_64K) && HASH_BITS == 15
-    for (j = 0;  j < HASH_SIZE; j++) head[j] = NIL;
+    for (j = 0;  j < HASH_SIZE; j++) head_hash[j] = NIL;
 #else
-    memzero((char*)head, HASH_SIZE*sizeof(*head));
+    memzero((char*)head_hash, HASH_SIZE*sizeof(*head_hash));
 #endif
     /* prev will be initialized on the fly */
 
@@ -3824,8 +3824,8 @@ local void fill_window()
         block_start -= (long) WSIZE;
 
         for (n = 0; n < HASH_SIZE; n++) {
-            m = head[n];
-            head[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
+            m = head_hash[n];
+            head_hash[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
         }
         for (n = 0; n < WSIZE; n++) {
             m = prev[n];
