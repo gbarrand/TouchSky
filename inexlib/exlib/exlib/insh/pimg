@@ -1,0 +1,164 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_insh_pimg
+#define exlib_insh_pimg
+
+#include "../sg/image_grid"
+
+#include <inlib/insh/ishell>
+
+#include <inlib/sg/view_evd>
+#include <inlib/sg/view_astro>
+#include <inlib/sg/view_sg_client>
+#include <inlib/pimg>
+#include <inlib/buf2lines>
+
+namespace exlib {
+
+inline void insh_pimg_vis(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("pimg_vis");
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+  inlib::sg::view_astro* _vastro = inlib::sg::cast_view_astro(a_gv);
+  if(!_vastro) {a_insh.warn(s_cmd+": viewer not a inlib::sg::view_astro.");return;}
+
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no file given.");
+    return;
+  }
+  _args.remove(fnh);
+  
+//std::string shost = _vastro->host();
+  std::string shost;
+  INLIB_ISHELL_GET_ARG_STRING(host)
+  
+  unsigned int port = 0;
+  INLIB_ISHELL_GET_ARG_UINT(port)
+
+  INLIB_ISHELL_GET_PLACEMENT_STATIC
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+
+  std::vector<std::string> lines;
+
+  if(shost.empty()) {
+    std::string path;
+    if(!a_gv.find_doc_res_file(fnh,path)) {
+      a_insh.warn(s_cmd+": pimg "+inlib::sout(fnh)+" not found in doc and res dirs.");
+      return;
+    }
+    path += "/params";
+    if(!inlib::file::read(path,lines)) {
+      a_insh.warn(s_cmd+": params read failed.");
+      return;
+    }
+  } else {
+    std::string sep = "/"; //if repserv running on a UNIX.
+    std::string cmd;
+    cmd += inlib::s_get_from_home();
+    cmd += " ";
+    cmd += sep+"Documents"+sep+"repserv"+sep+fnh+sep+"params";
+    char* doc;inlib::uint64 ldoc;
+    //NOTE : doc should be deleted with [].
+    std::string icookie;
+    std::string ocookie;
+    if(!_vastro->wget().post(shost,port,"cmd="+cmd,doc,ldoc,icookie,ocookie)) {
+      a_insh.warn(s_cmd+": get remote params failed.");
+      return;
+    }
+    inlib::buf2lines(doc,lines); //it is assumed that doc finished with 0.
+    delete [] doc;
+  }
+
+  float ra,dec;
+  inlib::lut<float> lut;
+  inlib::SOPI::cmap cmap(0);
+  double mn,mx,mean,rms;
+  unsigned int start_level;
+
+  if(!inlib::pimg::get_params(lines,ra,dec,lut,cmap,mn,mx,mean,rms,start_level)) {
+    a_insh.warn(s_cmd+": params parse failed.");
+    return;
+  }
+
+  double sky_radius = inlib::default_sky_radius();
+
+  inlib::sg::base_camera* _camera = inlib::sg::astro_pimg_camera(a_gv,sky_radius);
+
+  // ortho cam but stay in exam viewer.
+
+  // image_grid :
+  inlib::sg::separator* sep = new inlib::sg::separator;
+
+  inlib::sg::infos* infos = new inlib::sg::infos;
+  infos->add_title(fnh);
+  sep->add(infos);
+
+  inlib::sg::rgba* mat = new inlib::sg::rgba;
+//mat->color = inlib::colorf_white();
+  mat->color = inlib::colorf_black(); // (wall : we have black to avoid a white flash when changing level).
+  sep->add(mat);
+
+  //sep->add(new inlib::sg::normal);
+  //sep->add(new inlib::sg::event_dispatcher()); //for image_manip.
+
+  typedef exlib::sg::image_grid grid_t;
+
+  const std::string& doc_dir = a_gv.doc_dir();
+  
+  grid_t* _grid = 0;
+  if(shost.empty()) {
+    _grid = new grid_t(a_gv,
+                       _vastro->wget(), //simbad
+                       true, //local
+                       _vastro->wget(), //params (then not used).
+                       _vastro->wget(),"",0, //fits (then not used).
+                       doc_dir, //used
+                       lut,cmap,mn,mx,mean,rms);
+  } else {
+    _grid = new grid_t(a_gv,
+                       _vastro->wget(), //simbad
+                       false, //repserv
+                       _vastro->wget(), //params
+                       _vastro->wget(),shost,port, //fits
+                       doc_dir, //not used.
+                       lut,cmap,mn,mx,mean,rms);
+  }
+  _grid->modeling_scale_factor = start_level;
+  _grid->name = fnh;
+  _grid->sky_radius = sky_radius;
+  _grid->stars_radius = inlib::default_stars_radius();
+  sep->add(_grid);
+
+  INLIB_ISHELL_SEP_PLACEMENT
+
+  a_gv.num2console(_grid->modeling_scale_factor.value());
+
+  bool camera_in_front = true;
+  if(camera_in_front && _camera) {
+    //std::vector<inlib::vec3f> vcs;
+    //inlib::vec3f center;
+    //inlib::radecs_center(radecs,sky_radius,vcs,center);
+    _camera->astro_orientation(ra,dec /*,center*/);
+  }
+  _evd->replace_camera(_camera);
+}
+
+}
+
+//exlib_build_use inlib kernel
+//exlib_build_use inlib_glutess zlib freetype
+//exlib_build_use cfitsio
+//hdf5
+
+#endif

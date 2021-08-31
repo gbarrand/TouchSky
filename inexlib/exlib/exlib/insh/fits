@@ -1,0 +1,223 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_insh_fits
+#define exlib_insh_fits
+
+#include "../fits/cfitsio"
+
+#include <inlib/insh/ishell>
+#include <inlib/omanager>
+
+#include <inlib/sys/dir>
+#include <inlib/args>
+#include <inlib/path>
+#include <inlib/sout>
+#include <inlib/num2s>
+
+namespace exlib {
+
+inline void insh_fits_mount(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::omanager& a_mgr) {
+  static const std::string s_cmd("fits_mount");
+  inlib::args _args(a_args);
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no path given.");
+    return;
+  }
+  cfitsio::file* ffile = new cfitsio::file(a_insh.out());
+  if(!ffile->open(fnh)) {
+    a_insh.warn(s_cmd+": can't open fits file "+inlib::sout(fnh)+".");
+    delete ffile;
+    return;
+  }
+  
+  std::string managed_name;
+  _args.find("-managed_name",managed_name,"");
+  if(managed_name.empty()) managed_name = inlib::base_name(fnh);
+  
+  if(!a_mgr.manage_object(ffile,managed_name,true,true,true)) {
+    a_insh.warn(s_cmd+": can't manage object.");
+    delete ffile;
+    return;
+  }
+  if(!inlib::dir::mkcd("mount")) {
+    a_insh.warn(s_cmd+": mkcd() failed for \"mount\".");
+    return;
+  }
+  if(!inlib::dir::mkcd(managed_name)) {
+    a_insh.warn(s_cmd+": mkcd() failed for "+inlib::sout(managed_name)+".");
+    return;
+  }
+
+  unsigned int nbhdu = ffile->num_HDU();
+  for(unsigned int index=1;index<=nbhdu;index++) {
+    if(!ffile->to_HDU(index)) {
+      a_insh.warn(s_cmd+": can't go to hdu.");
+      return;
+    }
+    unsigned int id;
+    int hdutyp;
+    if(!ffile->cur_HDU(id,hdutyp)) {
+      a_insh.warn(s_cmd+": can't get current hdu infos.");
+      return;
+    }
+    
+    std::string sindex;
+    inlib::num2s(index,sindex);
+    const std::string& file_name = sindex;
+    FILE* _FILE = ::fopen(file_name.c_str(),"wb");
+    if(!_FILE) {
+      a_insh.warn(s_cmd+": fopen(wb) failed for "+inlib::sout(file_name)+".");
+      return;
+    }
+    std::string shdu;
+    cfitsio::sHDU(hdutyp,shdu);
+    if(::fprintf(_FILE,"type: %s\n",shdu.c_str())<0) {::fclose(_FILE);return;}
+   {std::vector<exlib::cfitsio::key> keys;
+    if(!ffile->HDU_keys(keys)) {
+      a_insh.warn(s_cmd+": can't get hdu keys.");
+      return;
+    }
+    if(::fprintf(_FILE,"keys (%lu):\n",keys.size())<0) {::fclose(_FILE);return;}
+    inlib_vforcit(exlib::cfitsio::key,keys,it) {
+      if(::fprintf(_FILE,"name: %s\n",(*it).name().c_str())<0) {::fclose(_FILE);return;}
+      if(::fprintf(_FILE,"value: %s\n",(*it).value().c_str())<0) {::fclose(_FILE);return;}
+      if(::fprintf(_FILE,"comment: %s\n",(*it).cmt().c_str())<0) {::fclose(_FILE);return;}
+    }}
+    
+    if( (hdutyp==ASCII_TBL) || (hdutyp==BINARY_TBL) ) {
+      unsigned int ncol;
+      unsigned int nrow;
+      std::vector<std::string> names;
+      std::vector<int> types;
+      std::vector<int> repeats;
+      std::vector<int> widths;
+      if(!ffile->TBL_infos(ncol,nrow,names,types,repeats,widths)) {
+        a_insh.warn(s_cmd+": can't get TBL_infos.");
+        return;
+      }
+      if(::fprintf(_FILE,"columns: %u\n",ncol)<0) {::fclose(_FILE);return;}
+      if(::fprintf(_FILE,"rows: %u\n",nrow)<0) {::fclose(_FILE);return;}
+      for(unsigned int icol=0;icol<ncol;icol++) {
+        if(::fprintf(_FILE,"name: %s\n",names[icol].c_str())<0) {::fclose(_FILE);return;}
+        if(::fprintf(_FILE,"type: %d\n",types[icol])<0) {::fclose(_FILE);return;}
+        if(::fprintf(_FILE,"repeat: %d\n",repeats[icol])<0) {::fclose(_FILE);return;}
+        if(::fprintf(_FILE,"width: %d\n",widths[icol])<0) {::fclose(_FILE);return;}
+      }
+    }
+
+    ::fclose(_FILE);
+  }
+
+  if(!inlib::dir::cd_up()) {a_insh.warn(s_cmd+": cd_up() failed.");return;}
+  if(!inlib::dir::cd_up()) {a_insh.warn(s_cmd+": cd_up() failed.");return;}
+}
+
+inline const std::string& insh_fits_mount_help() {
+  static const std::string s_help("\
+fits_mount: fits_mount path\n\
+  Mount a fits file on the local file system. The file is also opened and\n\
+  managed in the default object manager.\n\
+  -managed_name=string managed name. If none is given, the base_name of path is taken.\n\
+  The managed name is taken as the mounting point under the 'mount' directory. Note that\n\
+  the wanted mounting directory must be in a writable place.\n\
+  For each HDU in the file, a file with the same number/id is created containing its type\n\
+  along its keys. For each key, the (name,value,comment) are written in the file.\n\
+  Example:\n\
+    # if M51.fits is in the res dir of the app:\n\
+    fits_mount `app_dir -res` M51.fits\n\
+    omanager_ls  # M51.fits should be in the list.\n\
+    ls mount/M51.fits\n\
+    head mount/M51.fits/1\n\
+");
+  return s_help;
+}
+
+}
+
+#include "../fits/fits_image"
+#include <inlib/sg/ortho>
+#include <inlib/sg/astro_tools>
+
+namespace exlib {
+
+inline void insh_fits_to_sg(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::omanager& a_mgr) {
+  static const std::string s_cmd("fits_to_sg");
+  
+  inlib::args _args(a_args);
+
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no file given.");
+    return;
+  }
+
+  std::string managed_name;
+  _args.find("-managed_name",managed_name,"");
+  if(managed_name.empty()) managed_name = inlib::base_name(fnh);
+
+  unsigned int hdu = 1;
+  INLIB_ISHELL_GET_ARG_UINT(hdu)
+  unsigned int slice = 0;
+  INLIB_ISHELL_GET_ARG_UINT(slice)
+
+//sg::vis_fits(a_gv,_evd->static_sg(),fnh,hdu,slice,flat,auto_radec,ra,dec,stitle);
+
+  unsigned int width,height;
+  size_t sz;
+  int bitpix;
+  char* buffer = fits_image::read_slice(a_insh.out(),fnh,hdu,slice,width,height,sz,bitpix);
+  if(!buffer) {
+    a_insh.warn(s_cmd+": read_slice() failed.");
+    return;
+  }
+#ifdef INLIB_MEM
+  inlib::mem::decrement(inlib::s_new().c_str());
+#endif
+
+  std::string scmap = inlib::cbn(inlib::SOPI::colbr128::s_class());
+  inlib::SOPI::cmap _cmap(0);
+  inlib::SOPI::stocmap(scmap,_cmap);
+
+  inlib::sg::separator* sep = new inlib::sg::separator;
+  inlib::sg::ortho* _cam = new inlib::sg::ortho;
+  sep->add(_cam);
+  inlib::sg::node* _node = create_sg_cfitsio_flat(buffer,width,height,sz,bitpix,_cmap,*_cam,true);
+  sep->add(_node);
+
+  inlib::sg::node* _node_sep = sep;
+  if(!a_mgr.manage_object<inlib::sg::node>(_node_sep,managed_name,true,true,true)) {
+    a_insh.warn(s_cmd+": can't manage object.");
+    delete sep;
+    return;
+  }
+}
+
+inline const std::string& insh_fits_to_sg_help() {
+  static const std::string s_help("\
+fits_to_sg: fits_to_sg [-hdu,-slice,-managed_name] path\n\
+  Read a fits file and add a scene graph representation in the object manager.\n\
+  -hdu=uint (default 1)\n\
+  -slice=uint (default 0)\n\
+  -managed_name=string managed name. If none is given, the base_name of path is taken.\n\
+  Example:\n\
+    fits_to_sg m51.fits\n\
+");
+  return s_help;
+}
+
+}
+
+#include <inlib/insh/ishell_args_omanager_cmd>
+
+#define EXLIB_INSH_FITS_ADDS(a__insh,a__omanager)\
+  INLIB_INSH_ADD_ISHELL_ARGS_OMANAGER_CMD_COMPLETE(a__insh,a__omanager,fits_mount,\
+    exlib::insh_fits_mount,exlib::insh_fits_mount_help(),inlib::file::complete)\
+  INLIB_INSH_ADD_ISHELL_ARGS_OMANAGER_CMD_COMPLETE(a__insh,a__omanager,fits_to_sg,\
+    exlib::insh_fits_to_sg,exlib::insh_fits_to_sg_help(),inlib::file::complete)
+
+//exlib_build_use inlib
+//exlib_build_use cfitsio
+
+#endif

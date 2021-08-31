@@ -1,0 +1,132 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_sg_vis_fits
+#define exlib_sg_vis_fits
+
+//NOTE : there is a clash with TBYTE between fitsio.h that defines
+//       it as a cpp macro and winnt.h that defines it as a typedef.
+//       As windows.h is indirectly included by inlib/sys/dir through
+//       inlib/sg/view_evd => gui_viewer => guib, this file must be included first.
+#include <inlib/sg/view_evd>
+
+#include "../fits/fits_image"
+#include "../fits/wcs"
+#include "../sg/text_freetype_marker"
+
+#include <inlib/sg/astro_tools>
+//#include <inlib/sg/view_evd>
+#include <inlib/sg/view_astro>
+
+namespace exlib {
+namespace sg {
+
+inline void vis_fits(inlib::sg::gui_viewer& a_gv,inlib::sg::separator& a_sep,
+                     const std::string& a_path,
+                     unsigned int a_ihdu,unsigned int a_slice,
+                     bool a_flat,
+                     bool a_auto_radec,double a_ra,double a_dec,
+                     const std::string& a_title) {
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+  inlib::sg::view_astro* _vastro = inlib::sg::cast_view_astro(a_gv);
+  if(!_vastro) return;
+
+  unsigned int width,height;
+  size_t sz;
+  int bitpix;
+  char* buffer = fits_image::read_slice(a_gv.out(),a_path,a_ihdu,a_slice,width,height,sz,bitpix);
+  if(!buffer) {
+    a_gv.map_warn("read_slice() failed");
+    return;
+  }
+#ifdef INLIB_MEM
+  inlib::mem::decrement(inlib::s_new().c_str());
+#endif
+
+  std::string scmap = inlib::cbn(inlib::SOPI::colbr128::s_class());
+  inlib::SOPI::cmap _cmap(0);
+  inlib::SOPI::stocmap(scmap,_cmap);
+
+  inlib::sg::separator* sep = 0;
+
+  if(a_flat) {
+    if(!a_gv.scene_camera()) {
+      a_gv.map_warn("there is no scene camera.");
+    } else {
+      sep = create_sg_cfitsio_flat(buffer,width,height,sz,bitpix,_cmap,*a_gv.scene_camera());
+    }
+  } else {
+    double radecs[8];
+    if(!wcs::fits_corners(a_path.c_str(),radecs)) {
+      a_gv.map_warn("can't get radecs. Do a flat rep.");
+      sep = create_sg_cfitsio_flat(buffer,width,height,sz,bitpix,_cmap,*a_gv.scene_camera(),true);
+    } else {
+
+      //::printf("debug : radecs (%g,%g) (%g,%g) (%g,%g) (%g,%g)\n",
+      //  radecs[0],radecs[1],radecs[2],radecs[3],radecs[4],radecs[5],radecs[6],radecs[7]);
+
+      double sky_radius = inlib::default_sky_radius();
+      inlib::sg::base_camera* _camera = inlib::sg::astro_pimg_camera(a_gv,sky_radius);
+      if(!_camera) {
+        a_gv.map_warn("can't create a pimg camera.");
+      } else {
+
+        float ra,dec;
+        if(a_auto_radec) {
+          std::vector<inlib::vec3f> vcs;
+          inlib::vec3f center;
+          inlib::radecs_center(radecs,sky_radius,vcs,center);
+          float theta,phi;
+          center.theta_phi(theta,phi);
+          ra = phi*inlib::frad2deg();
+          dec = 90.0f-theta*inlib::frad2deg();
+        } else {
+          ra = a_ra;
+          dec = a_dec;
+        }
+
+        const inlib::wget& simbad_wget = _vastro->wget();
+
+        const inlib::wget& stars_wget = _vastro->wget();
+
+        const std::string& stars_host = _vastro->host();
+        unsigned int stars_port = _vastro->port();
+        bool stars_local = (stars_host.empty()||(stars_host==inlib::s_local())?true:false);
+
+        typedef sg::text_freetype_marker text_t;
+        //typedef sg::text_freetype text_t;
+        text_t* tft = new text_t; //template freetype node for cfitsio_stars.
+
+        double stars_radius = inlib::default_stars_radius();
+        sep = create_sg_cfitsio_sphere(buffer,width,height,sz,bitpix,_cmap,
+                                       sky_radius,stars_radius,
+                                       ra,dec,radecs,
+                                       simbad_wget,
+                                       stars_local,stars_wget,stars_host,stars_port,a_gv.doc_dir(),
+                                       _vastro->SDSS_catalog(),
+                                       *_camera,*tft);
+    
+        sep->add(new inlib::sg::holder<text_t>(tft));
+
+        if(a_title.size()) {
+          inlib::sg::infos* infos = new inlib::sg::infos;
+          infos->add_title(a_title);
+          sep->add(infos);
+        }
+
+        _evd->replace_camera(_camera);
+      }
+    }
+  }
+
+  if(sep) a_sep.add(sep);
+  delete [] buffer;
+}
+
+}}
+
+//exlib_build_use inlib cfitsio wcslib kernel inlib_glutess freetype
+
+#endif
+

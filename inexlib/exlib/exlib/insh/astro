@@ -1,0 +1,189 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_insh_astro
+#define exlib_insh_astro
+
+#include <inlib/insh/ishell>
+#include <inlib/sg/gui_viewer>
+
+#include <inlib/s2deg>
+#include <inlib/astro/stsci>
+
+namespace exlib {
+
+inline void insh_stsci_request(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("stsci_request");
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+
+  //Default (ra,dec) is for SN2005cs in M51 (from Wikipedia).
+  
+  double ra;
+ {std::string sra;
+  INLIB_ISHELL_GET_ARG_STRING(ra)
+  if(sra.empty()) sra = "13:29:53.4 hms";
+  if(!inlib::string_to_dec_10(sra,ra)) {
+    a_insh.warn(s_cmd+": bad RA string "+inlib::sout(sra));
+    return;
+  }}
+
+  double dec;
+ {std::string sdec;
+  INLIB_ISHELL_GET_ARG_STRING(dec)
+  if(sdec.empty()) sdec = "47:10:28 damas";
+  if(!inlib::string_to_dec_10(sdec,dec)) {
+    a_insh.warn(s_cmd+": bad DEC string "+inlib::sout(sdec));
+    return;
+  }}
+  
+  double w = 0.25;  //15 arcmin.
+  INLIB_ISHELL_GET_ARG_DOUBLE(w)
+  double h = 0.25;  //15 arcmin.
+  INLIB_ISHELL_GET_ARG_DOUBLE(h)
+
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+
+  std::string request;
+  inlib::stsci::build_request(a_gv.out(),ra,dec,w,h,request);
+
+  std::string url;
+  if(inlib::device::is_emscripten()) {
+    url += "https://";
+  } else {
+    url += "http://";
+  }
+  url += inlib::s_host_stsci();
+  if(request.size()&&(request[0]!='/')) url += "/";
+  url += request;
+
+  a_insh.out(url);
+}
+
+inline const std::string& insh_stsci_request_help() {
+  static const std::string s_help("\
+stsci_request: stsci_request [-ra,-dec,-w,-h]\n\
+  Build a URL request to STSCI. Defaults are for M51.\n\
+  -ra RA in decimal degree (default 202.472).\n\
+  -dec DEC in decimal degree (default 47.1744).\n\
+  -w window width in decimal degree (default 0.25 = 15 arcmin).\n\
+  -h window height in decimal degree (default 0.25 = 15 arcmin).\n\
+  Example:\n\
+    stsci_request -ra=202.472 -dec=47.1744 -w=0.25 -h=0.25  # for M51.\n\
+    stsci_request -ra='13:29:53.4 hms' -dec='47:10:28 damas' # for M51.\n\
+    url=`stsci_request`\n\
+    web_get_file -out=out.fits ${url}\n\
+    ls `app_dir -doc`\n\
+");
+  return s_help;
+}
+
+}
+
+#include "../sg/vis_fits"
+
+namespace exlib {
+
+inline void insh_scene_add_fits(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("scene_add_fits");
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no file given.");
+    return;
+  }
+  _args.remove(fnh);
+  std::string path;
+  if(!a_gv.find_doc_res_file(fnh,path)) {
+    a_insh.warn(s_cmd+": file "+inlib::sout(fnh)+" not found in doc and res dirs.");
+    return;
+  }
+  
+  bool flat = true;
+  INLIB_ISHELL_GET_ARG_BOOL(flat)
+  bool auto_radec = true;
+  INLIB_ISHELL_GET_ARG_BOOL(auto_radec)
+
+  double ra = 0;
+  double dec = 0;
+  if(!auto_radec) {
+   {std::string sra;
+    INLIB_ISHELL_GET_ARG_STRING(ra)
+    if(sra.empty()) sra = "13:29:53.4 hms";
+    if(!inlib::string_to_dec_10(sra,ra)) {
+      a_insh.warn(s_cmd+": bad RA string "+inlib::sout(sra));
+      return;
+    }}
+   {std::string sdec;
+    INLIB_ISHELL_GET_ARG_STRING(dec)
+    if(sdec.empty()) sdec = "47:10:28 damas";
+    if(!inlib::string_to_dec_10(sdec,dec)) {
+      a_insh.warn(s_cmd+": bad DEC string "+inlib::sout(sdec));
+      return;
+    }}
+  }
+  
+  unsigned int hdu = 1;
+  INLIB_ISHELL_GET_ARG_UINT(hdu)
+  unsigned int slice = 0;
+  INLIB_ISHELL_GET_ARG_UINT(slice)
+  
+  std::string stitle;
+  INLIB_ISHELL_GET_ARG_STRING(title)
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+
+  sg::vis_fits(a_gv,_evd->static_sg(),path,hdu,slice,flat,auto_radec,ra,dec,stitle);
+}
+
+inline const std::string& insh_scene_add_fits_help() {
+  static const std::string s_help("\
+scene_add_fits: scene_add_fits [-ra,-dec,-flat,-auto_radec] file\n\
+  Read a fits file and add a representation in the static scene graph.\n\
+  -flat flat or 'on a sphere' representation (default true).\n\
+  -auto_radec guess ra, dec from file content (default true).\n\
+  -ra if auto_radec false, RA in decimal degree (default 202.472).\n\
+  -dec if auto_radec false, DEC in decimal degree (default 47.1744).\n\
+  Example:\n\
+    stsci_request -ra=202.472 -dec=47.1744 -w=0.25 -h=0.25  # for M51.\n\
+    url=`stsci_request`\n\
+    web_get_file -out=out.fits ${url}  # file put in the app doc dir.\n\
+    scene_add_fits out.fits\n\
+    scene_add_fits -flat=false -auto_radec=false -ra=202.472 -dec=47.1744 out.fits\n\
+");
+  return s_help;
+}
+
+}
+
+#include "pimg"
+
+#include <inlib/insh/ishell_args_gui_viewer_cmd>
+
+#define EXLIB_INSH_ASTRO_ADDS(a__insh,a__viewer)\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,stsci_request,exlib::insh_stsci_request,exlib::insh_stsci_request_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,scene_add_fits,exlib::insh_scene_add_fits,exlib::insh_scene_add_fits_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,pimg_vis,\
+    exlib::insh_pimg_vis,\
+"pimg_vis: pimg_vis pimg\n\
+")
+
+//exlib_build_use inlib freetype zlib
+//exlib_build_use cfitsio wcslib
+
+#endif

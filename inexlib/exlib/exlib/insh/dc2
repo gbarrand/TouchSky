@@ -1,0 +1,449 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_insh_dc2
+#define exlib_insh_dc2
+
+#include "../zlib"
+
+#include <inlib/rroot/file>
+#include <inlib/rroot/fac>
+#include <inlib/rroot/tree>
+#include <inlib/rroot/leaf>
+#include <inlib/atime2s>
+#include <inlib/insh/ishell>
+
+#include <inlib/sg/view_evd>
+#include <inlib/sg/view_sg_client>
+#include <inlib/sg/atb_vertices>
+
+namespace exlib {
+
+inline void insh_exa_dc2_pos_z_root(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("exa_dc2_pos_z_root");
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  INLIB_ISHELL_GET_PLACEMENT_STATIC
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  
+  std::string sfile("dc2_pos_z.root");
+  std::string path;
+  if(!a_gv.find_doc_res_file(sfile,path)) {
+    a_insh.warn(s_cmd+": file "+inlib::sout(sfile)+" not found in doc and res dirs.");
+    return;
+  }
+
+  bool verbose = false;
+  inlib::rroot::file rfile(a_gv.out(),path,verbose);
+#ifdef EXLIB_DONT_HAVE_ZLIB
+#else
+  rfile.add_unziper('Z',exlib::decompress_buffer);
+#endif
+  if(!rfile.is_open()) {
+    a_insh.warn(s_cmd+": file "+path+" not opened.");
+    return;
+  }
+
+  inlib::rroot::key* key = rfile.dir().find_key("tree");
+  if(!key) {
+    a_insh.warn(s_cmd+": key for \"tree\" not found.");
+    return;
+  }
+  unsigned int sz;
+  char* buf = key->get_object_buffer(rfile,sz);
+  if(!buf) {
+    a_insh.warn(s_cmd+": can't get data buffer for ntuple.");
+    return;
+  }
+  inlib::rroot::buffer b(a_gv.out(),rfile.byte_swap(),sz,buf,key->key_length(),verbose);
+  inlib::rroot::fac fac(a_gv.out());
+  inlib::rroot::tree tree(rfile,fac);
+  if(!tree.stream(b)) {
+    a_insh.warn(s_cmd+": TTree streaming failed.");
+    return;
+  }
+  inlib::uint64 entries = tree.entries();
+
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  inlib::rroot::branch* branch = tree.find_branch("branch");
+  if(!branch) {
+    a_insh.warn(s_cmd+": branch \"branch\" not found.");
+    return;
+  }
+
+  std::vector<inlib::rroot::base_leaf*> leaves;
+  tree.find_leaves(leaves);
+  typedef inlib::rroot::leaf<double> dleaf;
+  std::vector<dleaf*> dleaves;
+ {inlib_vforcit(inlib::rroot::base_leaf*,leaves,it) {
+    if(dleaf* _dleaf = inlib::safe_cast<inlib::rroot::base_leaf,dleaf>(*(*it)) ){
+      dleaves.push_back(_dleaf);
+    } else {
+      a_insh.warn(s_cmd+": base_leaf not a leaf<double>.");
+      return;
+    }
+  }}
+
+  if(dleaves.size()!=4) {
+    a_insh.warn(s_cmd+": four leaves expected.");
+    return;
+  }
+
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+
+  inlib::sg::separator* sep = new inlib::sg::separator;
+
+  sep->add(new inlib::sg::matrix);
+  
+  inlib::SOPI::midas_heat cmap = inlib::SOPI::midas_heat();
+  size_t cmap_size = cmap.size();
+
+  double redshift_min = 1.0;
+  double redshift_max = 1.2;
+  double redshift_delta = redshift_max-redshift_min;
+  unsigned int redshift_index = 3;
+
+  inlib::sg::atb_vertices* vtxs = new inlib::sg::atb_vertices;
+  sep->add(vtxs);
+  vtxs->mode = inlib::gl::points();
+
+  std::vector<double> ds;
+
+  inlib::uint64 _entries = tree.entries();
+
+ {for(inlib::uint32 i=0;i<_entries;i++){
+    unsigned int n;
+    if(!branch->find_entry(rfile,inlib::uint32(i),n)) {
+      delete sep;
+      a_insh.warn(s_cmd+": branch.find_entry() failed.");
+      return;
+    }
+    ds.clear();
+   {inlib_vforcit(dleaf*,dleaves,it) {
+      double d;
+      if(!(*it)->value(0,d)) {
+        delete sep;
+        a_insh.warn(s_cmd+": leaf.value() failed.");
+        return;
+      }
+      ds.push_back(d);
+    }}
+
+    double color_factor = (ds[redshift_index]-redshift_min)/redshift_delta;
+
+    unsigned int icolor = (unsigned int)((1-color_factor)*(cmap_size-1));
+    // with midas_heat : icolor 0 is black, size-1 is white.
+    const inlib::SOPI::color& color = cmap.get_color(icolor);
+    float r = float(color.r());
+    float g = float(color.g());
+    float b = float(color.b());
+    float a = 1.0f;
+    vtxs->add_pos_color(float(ds[0]),float(ds[1]),float(ds[2]),r,g,b,a);
+  }}
+
+  vtxs->center();  //for manip.
+
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+
+  INLIB_ISHELL_SEP_PLACEMENT
+
+}
+
+inline const std::string& insh_exa_dc2_pos_z_root_help() {
+    static const std::string s_help("\
+exa_dc2_pos_z_root: exa_dc2_pos_z_root\n\
+  It reads the TTree 'tree' in the dc2_pos_z.root file found in the app doc dir.\n\
+  Someone must arrange to get this file here. The file (57657516 bytes) can be found at :\n\
+    https://docs.google.com/uc?export=download&id=13YIUQxkG6fcItOEC09PD28boX-9CWeao\n\
+  The tree is expected to contains x,y,z,red_shift of galaxies.\n\
+  Points are displayed by using a gradient color over the redshift.\n\
+  The colormap is inlib::SOPI::midas_heat.\n\
+  White is for redshift=1, black for redshift=1.2.\n\
+  Data got from LSSST/dc2 simulation.\n\
+");
+  return s_help;
+}
+
+}
+
+#include "../gzip"
+
+#include <inlib/buf2lines>
+
+namespace exlib {
+
+inline void insh_exa_dc2_rdz_csv_gz(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("exa_dc2_rdz_csv_gz");
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  INLIB_ISHELL_GET_PLACEMENT_STATIC
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+
+  std::string sfile("dc2_rdz_csv.gz");  //_csv.gz and not .csv.gz because of Android resource app packing.
+  std::string path;
+  if(!a_gv.find_doc_res_file(sfile,path)) {
+    a_insh.warn(s_cmd+": file "+inlib::sout(sfile)+" not found in doc and res dirs.");
+    return;
+  }
+
+  char* buffer;
+  long sz;
+  bool _is = false;
+  if(inlib::file::is_gzip(path,_is)&&_is) {
+    if(!exlib::gzip_read_bytes(path,buffer,sz)) {
+      a_insh.warn(s_cmd+": exlib::gzip_read_bytes() failed.");
+      return;
+    }
+  } else {
+    if(!inlib::file::read_bytes(path,buffer,sz)) {
+      a_insh.warn(s_cmd+": inlib::file::read_bytes() failed.");
+      return;
+    }
+  }
+
+  std::vector<std::string> lines;
+  inlib::buf2lines(sz,buffer,lines);
+
+  delete [] buffer;
+#ifdef INLIB_MEM
+  inlib::mem::decrement(inlib::s_new().c_str());
+#endif
+
+  inlib::sg::separator* sep = new inlib::sg::separator;
+
+  sep->add(new inlib::sg::matrix);
+  
+  inlib::SOPI::midas_heat cmap = inlib::SOPI::midas_heat();
+  size_t cmap_size = cmap.size();
+
+  double redshift_min = 1.0;
+  double redshift_max = 1.2;
+  double redshift_delta = redshift_max-redshift_min;
+  unsigned int redshift_index = 2;
+
+  inlib::sg::atb_vertices* vtxs = new inlib::sg::atb_vertices;
+  sep->add(vtxs);
+  vtxs->mode = inlib::gl::points();
+
+  std::vector<double> ds;
+
+  bool first_line = true;
+  inlib_vforcit(std::string,lines,it) {
+    const std::string& line = *it;
+    if(first_line) { //name of columns.
+      first_line = false;
+      continue;
+    }
+    if(!inlib::str_2ds((char*)line.c_str(),",",ds)) {
+      delete sep;
+      a_insh.warn(s_cmd+": inlib::str_2ds() failed.");
+      return;
+    }
+    if(ds.size()<3) {
+      delete sep;
+      a_insh.warn(s_cmd+": at least three doubles expected.");
+      return;
+    }
+    //printf("%g %g %g\n",d1,d2,d3);
+    double color_factor = (ds[redshift_index]-redshift_min)/redshift_delta;
+
+    unsigned int icolor = (unsigned int)((1-color_factor)*(cmap_size-1));
+    const inlib::SOPI::color& color = cmap.get_color(icolor);  // with midas_heat : icolor 0 is black, size-1 is white.
+    float r = float(color.r());
+    float g = float(color.g());
+    float b = float(color.b());
+    float a = 1.0f;
+    vtxs->add_pos_color(float(ds[0]),float(ds[1]),float(ds[2]),r,g,b,a);
+  }
+
+  vtxs->center();  //for manip.
+
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+
+  INLIB_ISHELL_SEP_PLACEMENT
+}
+
+inline const std::string& insh_exa_dc2_rdz_csv_gz_help() {
+    static const std::string s_help("\
+exa_dc2_rdz_csv_gz: exa_dc2_rdz_csv_gz\n\
+  It reads res/dc2_rdz_csv.gz coming with the distrib.\n\
+  Points (ra,dec,redshift) are displayed by using a gradient color over the redshift.\n\
+  The colormap is inlib::SOPI::midas_heat.\n\
+  White is for redshift=1, black for redshift=1.2.\n\
+  Data got from LSSST/dc2 simulation.\n\
+");
+  return s_help;
+}
+
+}
+
+#include <inlib/sg/healpix>
+
+#include "../fits/fits_image"
+
+namespace exlib {
+
+inline void insh_exa_healpix(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("exa_healpix");
+  inlib::sg::view_evd* _evd = inlib::sg::cast_view_evd(a_gv);
+  if(!_evd) return;
+
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  INLIB_ISHELL_GET_PLACEMENT_STATIC
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  
+  std::string path = a_gv.res_dir();
+  path += inlib::sep();
+  path += "syncmap.fits";
+
+  unsigned int hdu = 2;
+  unsigned int column = 0;
+
+  float _mn,_mx; //before applying lut.
+  unsigned int NSIDE;
+  bool ORDERING_RING;
+  float* hpixs =
+    exlib::fits_image::HEALPix_BINARY_TBL_read(a_gv.out(),path,hdu,column,NSIDE,ORDERING_RING,_mn,_mx);
+  if(!hpixs) {
+    a_insh.warn(s_cmd+": read failed");
+    return;
+  }
+
+  inlib::sg::separator* sep = new inlib::sg::separator;
+
+  inlib::sg::infos* infos = new inlib::sg::infos;
+  infos->add_title("HEALPix visualization of the CMB");
+  sep->add(infos);
+
+  //inlib::SOPI::midas_heat _cmap;
+  inlib::SOPI::col16 _cmap;
+
+  inlib::lut<float> lut(10,100,_cmap.size());
+
+  //////////////////////////////////////////////////////////
+  /// create scene graph ///////////////////////////////////
+  //////////////////////////////////////////////////////////
+ {inlib::sg::separator* _sep = new inlib::sg::separator;
+  sep->add(_sep);
+
+  inlib::sg::rgba* mat = new inlib::sg::rgba();
+  mat->color = inlib::colorf_white();
+  _sep->add(mat);
+
+  inlib::sg::matrix* tsf = new inlib::sg::matrix();
+  tsf->set_translate(1.2f,0,0);
+  _sep->add(tsf);
+
+  inlib::sg::healpix* _sphere = new inlib::sg::healpix();
+  _sphere->support = inlib::sg::healpix::support_sphere;
+  _sphere->bin_modeling = inlib::sg::bin_lego;
+  //_sphere->radius = 1;
+  _sphere->hmax = 0.2f;
+  _sphere->order = 5; //vis_NSIDE 256 <-> order 8.
+  _sphere->healpixs.setValues(0,12*NSIDE*NSIDE,hpixs);
+  _sphere->ordering = ORDERING_RING?inlib::sg::healpix::ordering_ring:inlib::sg::healpix::ordering_nested;
+  _sphere->lut = lut;
+  _sphere->colors.clear();
+ {for(unsigned int index=0;index<_cmap.size();index++) {
+    const inlib::SOPI::color& _col = _cmap.get_color(index);
+    _sphere->colors.add(inlib::colorf(_col.r(),_col.g(),_col.b()));
+  }}
+
+  //_sphere->zcut = 0.8f;
+  //_sphere->dynamic = true;
+
+  _sep->add(_sphere);}
+
+ {inlib::sg::separator* _sep = new inlib::sg::separator;
+  sep->add(_sep);
+
+  inlib::sg::rgba* mat = new inlib::sg::rgba();
+  mat->color = inlib::colorf_white();
+  _sep->add(mat);
+
+  inlib::sg::matrix* tsf = new inlib::sg::matrix();
+  tsf->set_translate(-1.2f,0,0);
+  _sep->add(tsf);
+
+  inlib::sg::healpix* _moll = new inlib::sg::healpix();
+  _moll->support = inlib::sg::healpix::support_moll_image;
+  _moll->bin_modeling = inlib::sg::bin_flat_line;
+//_moll->bin_modeling = inlib::sg::bin_flat_triangle;
+  _moll->order = 5; //vis_NSIDE 256 <-> order 8.
+  _moll->back_color = inlib::colorf_white();
+  _moll->expand = true;
+  _moll->height = 1;
+  _moll->healpixs.setValues(0,12*NSIDE*NSIDE,hpixs);
+  _moll->ordering = ORDERING_RING?inlib::sg::healpix::ordering_ring:inlib::sg::healpix::ordering_nested;
+  _moll->lut = lut;
+  _moll->colors.clear();
+ {for(unsigned int index=0;index<_cmap.size();index++) {
+    const inlib::SOPI::color& _col = _cmap.get_color(index);
+    _moll->colors.add(inlib::colorf(_col.r(),_col.g(),_col.b()));
+  }}
+  //_moll->dynamic = true;
+
+  _sep->add(_moll);}
+
+  delete [] hpixs;
+
+  INLIB_ISHELL_SEP_PLACEMENT
+}
+
+inline const std::string& insh_exa_healpix_help() {
+    static const std::string s_help("\
+exa_healpix: exa_healpix\n\
+  It reads res/syncmap.fits coming with the distrib and containing CMB data.\n\
+  A healpix of order 5 is done with these data and then a mollweid and a spherical\n\
+  projection are this this healpix.\n\
+");
+  return s_help;
+}
+
+}
+
+#include <inlib/insh/ishell_args_gui_viewer_cmd>
+
+#define EXLIB_INSH_DC2_ADDS(a__insh,a__viewer)\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,exa_dc2_pos_z_root,exlib::insh_exa_dc2_pos_z_root,exlib::insh_exa_dc2_pos_z_root_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,exa_dc2_rdz_csv_gz,exlib::insh_exa_dc2_rdz_csv_gz,exlib::insh_exa_dc2_rdz_csv_gz_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__viewer,exa_healpix,exlib::insh_exa_healpix,exlib::insh_exa_healpix_help())
+
+//exlib_build_use exlib inlib zlib
+//exlib_build_use cfitsio freetype
+
+#endif
+

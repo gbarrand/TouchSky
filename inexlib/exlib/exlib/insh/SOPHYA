@@ -1,0 +1,274 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
+#ifndef exlib_insh_SOPHYA
+#define exlib_insh_SOPHYA
+
+#include <histos.h>
+
+#include <inlib/insh/ishell>
+#include <inlib/args>
+#include <inlib/omanager>
+
+namespace exlib {
+
+inline void insh_sophya_histo_create(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::omanager& a_mgr) {
+  static const std::string s_cmd("sophya_histo_create");
+  
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no name given.");
+    return;
+  }
+  _args.remove(fnh);
+
+  bool no_warn;
+  INLIB_ISHELL_IS_ARG(no_warn)
+  bool warn = no_warn?false:true;
+
+  std::string stitle;
+  INLIB_ISHELL_GET_ARG_STRING(title)
+
+  unsigned int xbins = 100;
+  INLIB_ISHELL_GET_ARG_UINT(xbins)
+  double xmin = 0;
+  INLIB_ISHELL_GET_ARG_DOUBLE(xmin)
+  double xmax = 1;
+  INLIB_ISHELL_GET_ARG_DOUBLE(xmax)
+
+  INLIB_ISHELL_ARGS_UNEXPECTED
+
+  ::SOPHYA::Histo* h = new ::SOPHYA::Histo(xmin,xmax,xbins);
+  //h->SetTitle(stitle.c_str());
+  
+  a_mgr.manage_object< ::SOPHYA::Histo >(h,"SOPHYA::Histo",fnh,true,true,warn);
+}
+
+inline const std::string& insh_sophya_histo_create_help() {
+  static const std::string s_help("\
+sophya_histo_create: sophya_histo_create [-no_warn,-title,-xbins,-xmin,-xmax] managed_name\n\
+  Create a named and managed SOPHYA histogram.\n\
+  If an object with same managed name already exist it is deleted.\n\
+  -no_warn to not warn in case of overwriting an existing object.\n\
+  -title=string title of the histogram (default is '').\n\
+  -xbins=uint number of x bins (default is 100).\n\
+  -xmin=real x min (default is 0).\n\
+  -xmax=real x max (default is 1).\n\
+  Example:\n\
+    sophya_histo_create my_histo\n\
+    sophya_histo_create -title='my histo' -xbins=10 -xmin=-5 -xmax=5 h_1\n\
+");
+  return s_help;
+}
+
+}
+
+#include <inlib/find_rand>
+
+namespace exlib {
+
+inline void insh_sophya_histo_fill(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::omanager& a_mgr) {
+  static const std::string s_cmd("sophya_histo_fill");
+  
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no name given.");
+    return;
+  }
+  _args.remove(fnh);
+  
+  inlib::base_oholder* _boh = a_mgr.find_base_oholder(fnh);
+  if(!_boh) {
+    a_insh.warn(s_cmd+": histo object "+inlib::sout(fnh)+" not found.");
+    return;
+  }
+  double w = 1;
+  INLIB_ISHELL_GET_ARG_DOUBLE(w)
+  
+  double x = 0;
+//INLIB_ISHELL_GET_ARG_DOUBLE(x)
+  const inlib::irandd* rx = 0;
+  INLIB_ISHELL_GET_ARG_RAND(x,rx)
+  
+  if(::SOPHYA::Histo* _h1d = inlib::dynamic_cast_oholder_object< ::SOPHYA::Histo >(*_boh)) {
+    if(rx) {
+      inlib::uint64 entries = 0;
+      INLIB_ISHELL_GET_ARG_UINT64(entries)
+      for(inlib::uint64 index=0;index<entries;index++) _h1d->Add(rx->shootd(),w);
+    } else {
+      _h1d->Add(x,w);
+    }
+    INLIB_ISHELL_ARGS_UNEXPECTED
+    
+  } else {
+    a_insh.warn(s_cmd+": "+inlib::sout(fnh)+" has an unknown histo class.");
+  }
+}
+
+inline const std::string& insh_sophya_histo_fill_help() {
+  static const std::string s_help("\
+sophya_histo_fill: sophya_histo_fill [-x,-entries] managed_name\n\
+  Fill a managed SOPHYA histogram.\n\
+  -w=real weight of the fill (default is 1).\n\
+  -x=real x coordinate (default is 0).\n\
+  -x=random name of a managed random generator object.\n\
+  -entriesx=uint number of fill to do if using a random managed object.\n\
+  Example:\n\
+    sophya_histo_create -xbins=20 -xmin=-5 -xmax=5 h\n\
+    random_create -class=rgaussd -mean=0 -std_dev=1 r\n\
+    sophya_histo_fill -x=`random_shoot r` h\n\
+    sophya_histo_fill -entries=10000 -x=r h\n\
+");
+  return s_help;
+}
+
+inline void insh_sophya_histo_show(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::omanager& a_mgr) {
+  static const std::string s_cmd("sophya_histo_show");
+  
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no name given.");
+    return;
+  }
+  _args.remove(fnh);
+  bool print;
+  INLIB_ISHELL_IS_ARG(print)
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  
+  inlib::base_oholder* _boh = a_mgr.find_base_oholder(fnh);
+  if(!_boh) {
+    a_insh.warn(s_cmd+": histo object "+inlib::sout(fnh)+" not found.");
+    return;
+  }
+  
+  if(::SOPHYA::Histo* _h1d = inlib::dynamic_cast_oholder_object< ::SOPHYA::Histo >(*_boh)) {
+    if(print) {
+      _h1d->Print();
+    } else {
+      _h1d->Show(a_insh.out());
+    }
+    
+  } else {
+    a_insh.warn(s_cmd+": "+inlib::sout(fnh)+" has an unknown histo class.");
+  }
+}
+
+inline const std::string& insh_sophya_histo_show_help() {
+  static const std::string s_help("\
+sophya_histo_show: sophya_histo_show [-print] managed_name\n\
+  Print informations about a managed SOPHYA histogram.\n\
+  -print to print bins in an ASCII way.\n\
+  Example:\n\
+    sophya_histo_create -xbins=20 -xmin=-5 -xmax=5 h\n\
+    random_create -class=rgaussd -mean=0 -std_dev=1 r\n\
+    sophya_histo_fill -x=`random_shoot r` h\n\
+    sophya_histo_fill -entries=10000 -x=r h\n\
+    sophya_histo_show h\n\
+    sophya_histo_show -print h\n\
+");
+  return s_help;
+}
+
+}
+
+#include "../SOPHYA/h2plot"
+
+#include <inlib/sg/gui_viewer>
+#include <inlib/sg/plots>
+
+namespace exlib {
+
+inline void insh_sophya_histo_plot(inlib::ishell& a_insh,const std::vector<std::string>& a_args,inlib::sg::gui_viewer& a_gv) {
+  static const std::string s_cmd("sophya_histo_plot");
+  inlib::sg::plots* _plots = inlib::sg::search_plots<inlib::sg::plots>(a_gv);
+  if(!_plots) {
+    a_insh.warn(s_cmd+": no sg::plots node found.");
+    return;
+  }
+  inlib::sg::plotter& _plotter = _plots->current_plotter();
+  ////////////////////////////////////////
+  /// args : /////////////////////////////
+  ////////////////////////////////////////
+  inlib::args _args(a_args);
+  std::string fnh;
+  if(!_args.first_not_hyphen(fnh)) {
+    a_insh.warn(s_cmd+": no name given.");
+    return;
+  }
+  _args.remove(fnh);
+  inlib::base_oholder* _boh = a_gv.get_omanager().find_base_oholder(fnh);
+  if(!_boh) {
+    a_insh.warn(s_cmd+": "+fnh+" not found.");
+    return;
+  }
+
+  bool ref;
+  INLIB_ISHELL_IS_ARG(ref)
+  
+  std::string sinfos_name;
+  INLIB_ISHELL_GET_ARG_STRING(infos_name)
+  
+  INLIB_ISHELL_ARGS_UNEXPECTED
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+
+  if(::SOPHYA::Histo* _h1d = inlib::dynamic_cast_oholder_object< ::SOPHYA::Histo >(*_boh)) {
+    //setup_plotter(a_gv.out(),_plotter);
+    inlib::sg::plottable* _plottable = ref?new SOPHYA::h1d2plot(*_h1d):new SOPHYA::h1d2plot_cp(*_h1d);
+    if(sinfos_name.size()) _plottable->set_name(sinfos_name);
+    _plotter.add_plottable(_plottable);
+  } else {
+    a_insh.warn(s_cmd+": "+fnh+" has an unknown object class.");
+    return;
+  }
+}
+
+inline const std::string& insh_sophya_histo_plot_help() {
+  static const std::string s_help("\
+sophya_histo_plot: sophya_histo_plot managed_name\n\
+  Plot a named and managed SOPHYA histogram.\n\
+  Example:\n\
+    sophya_histo_create -title='my histo' -xbins=10 -xmin=-5 -xmax=5 h\n\
+    random_create -class=rgaussd -mean=0 -std_dev=1 r\n\
+    sophya_histo_fill -entries=10000 -x=r h\n\
+    sophya_histo_plot h\n\
+");
+  return s_help;
+}
+
+}
+
+#include <inlib/insh/ishell_args_omanager_cmd>
+#include <inlib/insh/ishell_args_gui_viewer_cmd>
+
+#define EXLIB_INSH_SOPHYA_ADDS(a__insh,a__holder)\
+  INLIB_INSH_ADD_ISHELL_ARGS_OMANAGER_CMD(a__insh,(a__holder).get_omanager(),sophya_histo_create,\
+    exlib::insh_sophya_histo_create,exlib::insh_sophya_histo_create_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_OMANAGER_CMD(a__insh,(a__holder).get_omanager(),sophya_histo_fill,\
+    exlib::insh_sophya_histo_fill,exlib::insh_sophya_histo_fill_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_OMANAGER_CMD(a__insh,(a__holder).get_omanager(),sophya_histo_show,\
+    exlib::insh_sophya_histo_show,exlib::insh_sophya_histo_show_help())\
+  INLIB_INSH_ADD_ISHELL_ARGS_GUI_VIEWER_CMD(a__insh,a__holder,sophya_histo_plot,\
+    exlib::insh_sophya_histo_plot,exlib::insh_sophya_histo_plot_help())\
+
+//exlib_build_use inlib inlib_glutess freetype jpeg zlib png SOPHYA kernel
+
+#endif
+
