@@ -1,0 +1,39 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_spark
+#define inlib_spark
+
+namespace inlib {
+namespace spark {
+
+inline char const* greet() {return "inlib/spark/greet : hello.";}
+
+}}
+
+#include <vector>
+#include <string>
+#include <cstdio>
+
+#include "size_t"
+
+namespace inlib {
+namespace spark {
+
+inline void get_xyzs(const std::vector<double>& a_x,const std::vector<double>& a_y,const std::vector<double>& a_z) {
+  std::string fmt = "inlib::spark::get_xyzs : ";
+  fmt += size_t_format();
+  fmt += ", ";
+  fmt += size_t_format();
+  fmt += ", ";
+  fmt += size_t_format();
+  fmt += ".\n";
+  ::printf(fmt.c_str(),a_x.size(),a_y.size(),a_z.size());
+  if(a_x.size() && a_y.size() && a_z.size()) {
+    ::printf("last : %g, %g, %g\n",a_x[a_x.size()-1],a_y[a_y.size()-1],a_z[a_z.size()-1]);
+  }
+}
+
+}}
+
+#endif
