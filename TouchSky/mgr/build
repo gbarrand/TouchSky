@@ -4,7 +4,8 @@ bush_home=../../bush
 
 . ${bush_home}/args
 
-#build_args="${build_args} -app_use_SOPHYA"
+build_args="${build_args} -app_use_SOPHYA"
+#build_args="${build_args} -app_use_sophya_dev"
 #build_args="${build_args} -app_use_Python"
 
 . ${bush_home}/app_header_use
@@ -12,8 +13,25 @@ bush_home=../../bush
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
+if [ "${use_sophya_dev}" = yes ] ; then
+  cppflags="${cppflags} -DAPP_USE_SOPHYA"
+fi
 
-if [ ${build_visual} = "yes" ] ; then cppflags="${cppflags} -bigobj"; fi
+cppfiles="${cppfiles} ${inlib_home}/inlib/yacc/cexpr_lexer.cpp"
+cppfiles="${cppfiles} ${inlib_home}/inlib/yacc/cexpr_eval.cpp"
+
+if [ ${build_x11} = yes ] ; then
+  cppflags="${cppflags} -DEXLIB_APP_HAS_TERM -DEXLIB_APP_TERM_INSH"
+  use_Getline=yes
+fi
+if [ ${build_sdk_mac} = yes ] ; then
+  cppflags="${cppflags} -DEXLIB_APP_HAS_TERM -DEXLIB_APP_TERM_INSH"
+  use_Getline=yes
+fi
+if [ ${build_visual} = yes ] ; then
+  cppflags="${cppflags} -DEXLIB_APP_HAS_TERM -DEXLIB_APP_TERM_INSH"
+  use_Getline=yes
+fi
 
 # lua :
 cppfiles="${cppfiles} ${exlib_home}/exlib/slua/inlib_swig_lua.cpp"
@@ -23,6 +41,15 @@ if [ "${use_Python}" = "yes" ] ; then
   cppfiles="${cppfiles} ${exlib_home}/exlib/spy/inlib_swig_py.cpp"
 fi
 
+if [ ${build_wasm}  = yes ] ; then
+  cppflags="${cppflags} -Wno-exceptions" # for SOPHYA to quiet ~ThSafeOp warning.
+  use_hdf5=no
+  use_Python=no
+else    
+  use_hdf5=yes
+fi
+
+#//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////
@@ -30,11 +57,10 @@ fi
 use_zip=yes
 use_csz=yes
 use_cfitsio=yes
-use_hdf5=yes
 use_wcslib=yes
 use_lua=yes
-use_thread=yes #for Python
 
+. ${bush_home}/use/Getline
 . ${bush_home}/use/csz
 . ${bush_home}/use/cfitsio
 . ${bush_home}/use/hdf5
@@ -42,7 +68,6 @@ use_thread=yes #for Python
 
 . ${bush_home}/use/zip
 . ${bush_home}/use/lua
-. ${bush_home}/use/thread
 
 . ${bush_home}/app_trailer_use
 
