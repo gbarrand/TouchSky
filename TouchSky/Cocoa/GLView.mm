@@ -5,4 +5,4 @@
 
 typedef TouchSky::main app_main_t;
 
-#import <exlib/app/Cocoa/GLView_mm>
+#import <exlib/app/Cocoa/GLView.mm>
