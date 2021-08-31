@@ -1,0 +1,21 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_size_t
+#define inlib_size_t
+
+#include <cstddef> //size_t
+
+namespace inlib {
+
+inline const char* size_t_format() {
+  if(sizeof(size_t)==8) {
+    static const char s[] = "%lu";return s;
+  } else { //assume 4 :
+    static const char s[] = "%u";return s;
+  }
+}
+
+}
+
+#endif
