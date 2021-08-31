@@ -1,0 +1,11 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_rroot_list
+#define inlib_rroot_list
+
+// deprecated, use obj_list or hash_list.
+
+#include "hash_list"
+
+#endif

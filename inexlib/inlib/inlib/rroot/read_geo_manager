@@ -1,0 +1,36 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_rroot_read_geo_manager
+#define inlib_rroot_read_geo_manager
+
+#include "geo_manager"
+#include "file"
+
+namespace inlib {
+namespace rroot {
+
+inline bool read_geo_manager(std::ostream& a_out,file& a_file,geo_manager& a_mgr) {
+  key* key = a_file.dir().find_key_from_class("TGeoManager");
+  if(!key) {
+    a_out << "TGeoManager key not found." << std::endl;
+    return false;
+  }
+  unsigned int sz;
+  char* buf = key->get_object_buffer(a_file,sz);
+  if(!buf) {
+    a_out << "can't get data buffer TGeoManager key." << std::endl;
+    return false;
+  }
+  inlib::rroot::buffer b(a_out,a_file.byte_swap(),sz,buf,key->key_length(),false);
+  b.set_map_objs(true);
+  if(!a_mgr.stream(b)) {
+    a_out << "streaming failed for TGeoManager." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+}}
+
+#endif

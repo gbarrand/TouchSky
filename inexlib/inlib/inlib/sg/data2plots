@@ -1,0 +1,79 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_sg_data2plots
+#define inlib_sg_data2plots
+
+#include "gui_viewer"
+#include "plots"
+#include "plotter_style"
+
+#include "h2plot_cp"
+#include "cloud2plot_cp"
+
+namespace inlib {
+namespace sg {
+
+inline void plot(gui_viewer& a_gv,const histo::h1d& a_histo,bool a_cp = true) {
+  plots* _plots = search_plots<sg::plots>(a_gv);
+  if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  if(a_cp) {
+    plotter.add_plottable(new h1d2plot_cp(a_histo));
+  } else {
+    plotter.add_plottable(new h1d2plot(a_histo));
+  }
+  style_from_res(a_gv.styles(),guiv::s_default(),plotter,true);
+}
+
+inline void plot(gui_viewer& a_gv,const histo::h2d& a_histo,bool a_cp = true) {
+  plots* _plots = search_plots<sg::plots>(a_gv);
+  if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  if(a_cp) {
+    plotter.add_plottable(new h2d2plot_cp(a_histo));
+  } else {
+    plotter.add_plottable(new h2d2plot(a_histo));
+  }
+  style_from_res(a_gv.styles(),guiv::s_default(),plotter,true);
+}
+
+inline void plot(gui_viewer& a_gv,const histo::p1d& a_histo) {
+  plots* _plots = search_plots<sg::plots>(a_gv);
+  if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  plottable* ptb = new p1d2plot_cp(a_histo);
+  plotter.add_plottable(ptb);
+  style_from_res(a_gv.styles(),guiv::s_default(),plotter,true);
+}
+
+inline void plot(gui_viewer& a_gv,const histo::c2d& a_histo) {
+  plots* _plots = search_plots<sg::plots>(a_gv);
+  if(!_plots) return;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  plottable* ptb = new c2d2plot_cp(a_histo);
+  plotter.add_plottable(ptb);
+  style_from_res(a_gv.styles(),guiv::s_default(),plotter,true);
+}
+
+inline plotter* plot(gui_viewer& a_gv,const histo::c3d& a_histo,bool a_cp = true) {
+  plots* _plots = search_plots<sg::plots>(a_gv);
+  if(!_plots) return 0;
+  plotter& plotter = _plots->current_plotter();
+  plotter.clear();
+  if(a_cp) {
+    plotter.add_plottable(new c3d2plot_cp(a_histo));
+  } else {
+    plotter.add_plottable(new c3d2plot(a_histo));
+  }
+  style_from_res(a_gv.styles(),guiv::s_default(),plotter,true);
+  return &plotter;
+}
+
+}}
+
+#endif

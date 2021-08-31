@@ -1,0 +1,66 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_rroot_stl_vector_obj
+#define inlib_rroot_stl_vector_obj
+
+#include "buffer"
+#include "cids"
+
+#include "../stype"
+#include "../scast"
+#include "../cids"
+
+namespace inlib {
+namespace rroot {
+
+template <class T>
+class stl_vector_obj : public virtual iro, public std::vector<T> {
+public:
+  static const std::string& s_class() {
+    static const std::string s_v("inlib::rroot::stl_vector_obj<"+stype(T())+">");
+    return s_v;
+  }
+public: //iro
+  virtual void* cast(const std::string& a_class) const {
+    if(void* p = cmp_cast< stl_vector_obj<T> >(this,a_class)) return p;
+    return 0;
+  }
+  virtual const std::string& s_cls() const {return s_class();}
+public:
+  static cid id_class() {return stl_vector_obj_cid()+_cid(T());}
+  virtual void* cast(cid a_class) const {
+    if(void* p = cmp_cast< stl_vector_obj<T> >(this,a_class)) {return p;}
+    return 0;
+  }
+  virtual iro* copy() const {return new stl_vector_obj<T>(*this);}
+  virtual bool stream(buffer& a_buffer) {return false;}
+public:
+  stl_vector_obj(){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~stl_vector_obj(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
+public:
+  stl_vector_obj(const stl_vector_obj& a_from)
+  :iro(a_from)
+  ,std::vector<T>(a_from)
+  {
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  stl_vector_obj& operator=(const stl_vector_obj& a_from){
+    std::vector<T>::operator=(a_from);
+    return *this;
+  }
+};
+
+}}
+
+#endif
