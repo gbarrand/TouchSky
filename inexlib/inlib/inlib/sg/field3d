@@ -9,7 +9,7 @@
 #include "node"
 #include "sf"
 #include "mf"
-#include "../vec3d"
+#include "../lina/vec3d"
 #include "../mnmx"
 
 namespace inlib {
@@ -156,7 +156,7 @@ public:
     if(dy.value()<=0) return false;
     if(dz.value()<=0) return false;
 */
-    double x = a_r.x() - ox;  
+    double x = a_r.x() - ox;
     double y = a_r.y() - oy;
     double z = a_r.z() - oz;
 
@@ -166,7 +166,7 @@ public:
     if((i<0)||(i>=int(_nx-1))) return false;
     if((j<0)||(j>=int(_ny-1))) return false;
     if((k<0)||(k>=int(_nz-1))) return false;
-    
+
     int ijk000 = ( _nx*( _ny*k     + j )     + i );
     int ijk001 = ( _nx*( _ny*(k+1) + j )     + i );
     int ijk010 = ( _nx*( _ny*k     + j + 1 ) + i );
@@ -175,7 +175,7 @@ public:
     int ijk101 = ( _nx*( _ny*(k+1) + j)      + i + 1 );
     int ijk110 = ( _nx*( _ny*k     + j + 1)  + i + 1 );
     int ijk111 = ( _nx*( _ny*(k+1) + j + 1 ) + i + 1 );
-      
+
     // auxiliary variables defined at the vertices of the cube that
     // contains the (x, y, z) point where the field is interpolated
     double cx000,cx001,cx010,cx011,cx100,cx101,cx110,cx111,
@@ -183,7 +183,7 @@ public:
            cz000,cz001,cz010,cz011,cz100,cz101,cz110,cz111;
 
     const std::vector<vec3d>& m_Q = vectors.values();
-      
+
     cx000 = (m_Q)[ ijk000 ].x();
     cy000 = (m_Q)[ ijk000 ].y();
     cz000 = (m_Q)[ ijk000 ].z();
@@ -208,14 +208,14 @@ public:
     cx111 = (m_Q)[ ijk111 ].x();
     cy111 = (m_Q)[ ijk111 ].y();
     cz111 = (m_Q)[ ijk111 ].z();
-      
+
     double hx1 = ( x-i*_dx)/_dx;
     double hy1 = ( y-j*_dy)/_dy;
     double hz1 = ( z-k*_dz)/_dz;
     double hx0 = 1.0-hx1;
     double hy0 = 1.0-hy1;
     double hz0 = 1.0-hz1;
-      
+
     double h000 = hx0*hy0*hz0;
     double h001 = hx0*hy0*hz1;
     double h010 = hx0*hy1*hz0;
@@ -224,7 +224,7 @@ public:
     double h101 = hx1*hy0*hz1;
     double h110 = hx1*hy1*hz0;
     double h111 = hx1*hy1*hz1;
-      
+
     a_bf.v0( cx000*h000 + cx001*h001 + cx010*h010 + cx011*h011 +
              cx100*h100 + cx101*h101 + cx110*h110 + cx111*h111) ;
     a_bf.v1( cy000*h000 + cy001*h001 + cy010*h010 + cy011*h011 +

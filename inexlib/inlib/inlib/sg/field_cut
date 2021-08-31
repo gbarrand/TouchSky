@@ -26,8 +26,8 @@ public:
     return true;
   }
 public:
-  sf<float> sx; 
-  sf<float> sy; 
+  sf<float> sx;
+  sf<float> sy;
   sf<unsigned int> nx;
   sf<unsigned int> ny;
   sf<float> back_dz;
@@ -136,7 +136,7 @@ protected:
 
     float sx2 = sx*0.5f;
     float sy2 = sy*0.5f;
- 
+
     float px,py,pz;
     float fpx,fpy,fpz;
     float fx,fy,fz;
@@ -152,7 +152,7 @@ protected:
         px = ix*sx - w2 + sx2;
         py = iy*sy - h2 + sy2;
         pz = 0;
-  
+
         fpx = px;fpy = py;fpz = pz;
         mtx.mul_3f(fpx,fpy,fpz);
         if(!field_vector(fpx,fpy,fpz,fx,fy,fz,r,g,b,a)) {}
@@ -182,7 +182,7 @@ protected:
         add_normal_allocated(nms_pos,0,0,1);
         add_normal_allocated(nms_pos,0,0,1);
         add_normal_allocated(nms_pos,0,0,1);
-  
+
         add_allocated(xyzs_pos,x3,y3,z3);
         add_allocated(xyzs_pos,x4,y4,z4);
         add_allocated(xyzs_pos,x1,y1,z1);
@@ -192,7 +192,7 @@ protected:
         add_normal_allocated(nms_pos,0,0,1);
         add_normal_allocated(nms_pos,0,0,1);
         add_normal_allocated(nms_pos,0,0,1);
-  
+
         // back face :
         add_allocated(xyzs_pos,x1,y1,z1+back_dz);
         add_allocated(xyzs_pos,x4,y4,z4+back_dz);
@@ -203,7 +203,7 @@ protected:
         add_normal_allocated(nms_pos,0,0,-1);
         add_normal_allocated(nms_pos,0,0,-1);
         add_normal_allocated(nms_pos,0,0,-1);
-  
+
         add_allocated(xyzs_pos,x3,y3,z3+back_dz);
         add_allocated(xyzs_pos,x2,y2,z2+back_dz);
         add_allocated(xyzs_pos,x1,y1,z1+back_dz);

@@ -78,6 +78,9 @@ inline separator* create_sg_cfitsio_flat(
     a_camera.focal = 1;
     a_camera.znear = 0.1f;
     a_camera.zfar = 100.0f;
+
+    a_camera.dx = 0.01f;
+    a_camera.da  = 0.017f; //one degree.
   }
 
   return sep;
@@ -121,8 +124,7 @@ inline separator* create_sg_cfitsio_sphere(
 //tft->font = font_arialbd_ttf();
   a_ttf.font = font_helvetica_ttf();
 
-  cfitsio_stars* img = new cfitsio_stars
-    (a_ttf,a_simbad_wget,a_stars_local,a_stars_wget,a_stars_host,a_stars_port,a_stars_dir,a_stars_catalog);
+  cfitsio_stars* img = new cfitsio_stars(a_ttf,a_simbad_wget,a_stars_local,a_stars_wget,a_stars_host,a_stars_port,a_stars_dir,a_stars_catalog);
   img->sky_radius = a_sky_radius;
   img->stars_radius = a_stars_radius;
   img->buffer.setValues(0,a_sz,a_buffer);
@@ -145,7 +147,11 @@ inline separator* create_sg_cfitsio_sphere(
   sep->add(img);
 
   bool camera_in_front = true;
-  if(camera_in_front) a_camera.astro_orientation(float(a_ra),float(a_dec));
+  if(camera_in_front) {
+    a_camera.astro_orientation(float(a_ra),float(a_dec));
+    a_camera.dx = 0.01f;
+    a_camera.da  = 0.017f; //one degree.
+  }
 
   return sep;
 }

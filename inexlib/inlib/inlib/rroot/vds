@@ -7,7 +7,7 @@
 // to read an ascii file containing rows of :
 //   <string:volume name> <uint:volume depth>
 
-#include "../file"
+#include "../file_read"
 #include "../words"
 #include "../sto"
 
@@ -35,7 +35,7 @@ inline bool read_vds(const std::string& a_file,
       ::fclose(file);
       return false;
     }
- 
+
     a_vds.push_back(std::pair<std::string,unsigned int>(ws[0],depth));
 
   }

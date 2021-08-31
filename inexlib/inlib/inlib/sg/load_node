@@ -11,15 +11,41 @@
 #include "search"
 
 #include "../args"
-#include "../wall/strings"
+#include "../svalues"
 
 #include "view_evd"
 
 namespace inlib {
 
+inline sg::base_camera* camera_in_file(sg::gui_viewer& a_gv,sg::node& a_node) {
+  sg::base_camera* cam_in_file = 0;
+ {sg::search_action action(a_gv.out());
+  action.set_class(sg::base_camera::s_class());
+  a_node.search(action);
+  const std::vector<void*>& objs = action.objs();
+  std::vector<void*>::const_iterator it;
+  for(it=objs.begin();it!=objs.end();++it) {
+    cam_in_file = (sg::base_camera*)(*it);
+    break;
+  }}
+  if(!cam_in_file) return 0;
+  // have to remove cam_in_file from within a_node :
+  sg::group* grp = sg::find_container<sg::group>(a_gv.out(),a_node,*cam_in_file,a_gv.verbose());
+  if(!grp) {
+    a_gv.map_warn("search of camera parent failed.");
+    return 0;
+  }
+  if(!grp->remove(cam_in_file)) {
+    a_gv.map_warn("remove camera in container failed.");
+    return 0;
+  }
+  return cam_in_file;
+}
+
 inline void load_node(sg::gui_viewer& a_gv,sg::node* a_node,const args& a_args) {
   sg::view_evd* _evd = cast_view_evd(a_gv);
   if(!_evd) {delete a_node;return;}
+  if(!_evd->is_evd()) _evd->create_sg_evd();
 
   bool enable_anim = false;
  {sg::search_action action(a_gv.out());
@@ -29,36 +55,13 @@ inline void load_node(sg::gui_viewer& a_gv,sg::node* a_node,const args& a_args) 
   enable_anim = (action.objs().size()?true:false);}
 
   std::string placement;
-  a_args.find(wall::s_placement(),placement);
+  a_args.find(sg::s_send_placement(),placement);
 
-  if(placement.empty()) {
+  if(a_gv.verbose()) a_gv.out() << "inlib::sg::load_node : placement : " << sout(placement) << "." << std::endl;
 
-    sg::base_camera* cam_in_file = 0;
-
-   {sg::search_action action(a_gv.out());
-    action.set_class(sg::base_camera::s_class());
-    a_node->search(action);
-    const std::vector<void*>& objs = action.objs();
-    std::vector<void*>::const_iterator it;
-    for(it=objs.begin();it!=objs.end();++it) {
-      cam_in_file = (sg::base_camera*)(*it);
-      break;
-    }}      
-  
-    if(!_evd->is_evd()) _evd->create_sg_evd();
-
-    if(cam_in_file) {
-      // have to remove cam_in_file from within a_node :
-      sg::group* grp = sg::find_container<sg::group>(a_gv.out(),*a_node,*cam_in_file,a_gv.verbose());
-      if(!grp) {
-        a_gv.map_warn("search of camera parent failed.");
-        return;     
-      }
-      if(!grp->remove(cam_in_file)) {
-        a_gv.map_warn("bad camera parent failed.");
-        return;     
-      }
-
+  if(!a_args.is_arg("ignore_camera_in_file")) {
+    sg::base_camera* cam_in_file = camera_in_file(a_gv,*a_node);
+    if(cam_in_file) { //we are owner.
       if(a_gv.is_wall_screen_app()) {
         sg::base_camera* camera = a_gv.create_camera(*cam_in_file);
         if(camera) _evd->replace_camera(camera);
@@ -67,84 +70,115 @@ inline void load_node(sg::gui_viewer& a_gv,sg::node* a_node,const args& a_args) 
         _evd->replace_camera(cam_in_file);
       }
     }
+  }
 
-    sg::separator& dsep = _evd->detector_sg();
+  if(placement.empty()) {
 
-    //if(a_args.is_arg(sg::s_clear_scene())) dsep.clear();
+    sg::separator& dsep = _evd->static_sg();
+
+    if(a_args.is_arg(sg::s_send_clear())) dsep.clear();
 
     //bool was_empty = dsep.size()?false:true;
 
-    bool movable;
+    inlib::sg::matrix* layout = 0;
+   {std::string sarg;
+    if(a_args.find(inlib::sg::s_translation(),sarg)) { //EsbRootView.scenarios
+      std::vector<float> vals;
+      if(values(sarg," ",false,vals)&&(vals.size()==3)) {
+        if(!layout) layout = new inlib::sg::matrix();
+        layout->mul_translate(vec3f(vals[0],vals[1],vals[2]));
+      }
+    }}
+   {std::string sarg;
+    if(a_args.find(inlib::sg::s_rotation(),sarg)) { //EsbRootView.scenarios
+      std::vector<float> vals;
+      if(values(sarg," ",false,vals)&&(vals.size()==4)) {
+        if(!layout) layout = new inlib::sg::matrix();
+        layout->mul_rotate(vec3f(vals[0],vals[1],vals[2]),vals[3]);
+      }
+    }}
+   {float scale;
+    if(a_args.find<float>(inlib::sg::s_scale(),scale,1)) { //EsbRootView.scenarios
+      if(!layout) layout = new inlib::sg::matrix();
+      layout->mul_scale(scale,scale,scale);  //if any, applied first.
+    }}
+
+    inlib::sg::matrix* mtx = 0;
+   {bool movable;
     if(a_args.find(sg::s_movable(),movable,false)&&movable) { //for pmx.scenarios.
-      sg::separator* sep = new sg::separator;
-      sep->add(new sg::matrix);
+      mtx = new sg::matrix;
+    }}
+
+    if(layout||mtx) {
+      inlib::sg::separator* sep = new inlib::sg::separator;
+      if(layout) sep->add(layout);
+      if(mtx) sep->add(mtx);
       sep->add(a_node);
       dsep.add(sep);
     } else {
       dsep.add(a_node);
     }
-  
+
     //if(!a_args.is_arg(sg::s_no_hide_menu())) a_gv.hide_main_menu();
     a_gv.hide_main_menu();
 
     //if(a_args.is_arg(sg::s_adapt_camera_sg_was_empty()) && was_empty) a_gv.adapt_camera(dsep);
 
   } else {
-    // case of wall : 
+    // case of wall :
     // could be a sg (det,event,plots) coming from exlib/geant4/session
     // or plots from ioda.
-  
-    if(!_evd->is_evd()) _evd->create_sg_evd();
-  
+
     //must reflect the exlib/geant/session logic.
-    if(placement==wall::s_static()) {
+    if(placement==sg::s_placement_static()) {
       float radius;
-      if(a_args.find(wall::s_radius(),radius)){
+      if(a_args.find(sg::s_send_radius(),radius)){
         sg::base_camera* camera = a_gv.create_3D_camera(radius);
         _evd->replace_camera(camera);
       }
 
       sg::separator& dsep = _evd->static_sg();
-      //if(a_args.is_arg(sg::s_clear_scene())) dsep.clear();
+      if(a_args.is_arg(sg::s_send_clear())) dsep.clear();
 
       dsep.add(a_node);
 
       a_gv.hide_main_menu();
 
-    } else if(placement==wall::s_dynamic()) {
+    } else if(placement==sg::s_placement_dynamic()) {
       float radius;
-      if(a_args.find(wall::s_radius(),radius)){
+      if(a_args.find(sg::s_send_radius(),radius)){
         sg::base_camera* camera = a_gv.create_3D_camera(radius);
         _evd->replace_camera(camera);
       }
 
       sg::separator& sep = _evd->dynamic_sg();
-      sep.clear();
+      if(a_args.is_arg(sg::s_send_clear())) sep.clear();
+
       sep.add(a_node);
       //don't hide main menu to be able
       //to get menu when receiving events.
 
-    } else if(placement==wall::s_screen()) {
+    } else if(placement==sg::s_placement_screen()) {
 
 /* do not touch the screen_sg camera :
       float hcam;
-      //if(a_args.find(wall::s_height(),hcam)){
-      a_args.find(wall::s_height(),hcam,a_gv.gui_camera_height());
+      //if(a_args.find(s_send_height(),hcam)){
+      a_args.find(s_send_height(),hcam,a_gv.gui_camera_height());
       sg::base_camera* camera = a_gv.create_2D_camera(hcam);
       _evd->replace_screen_camera(camera);
 */
       float scale;
-      a_args.find<float>(wall::s_scale(),scale,1);
+      a_args.find<float>(sg::s_send_scale(),scale,1);
 
       unsigned int col = 0;
       a_args.find(sg::s_col(),col);
       unsigned int row = 0;
       a_args.find(sg::s_row(),row);
       std::string what;
-      a_args.find(wall::s_clear(),what,"");
+      a_args.find(sg::s_send_clear(),what,"");
 
       sg::separator& screen_sep = _evd->screen_sg();
-      if(what==wall::s_screen()) screen_sep.clear();
+      if(what==sg::s_placement_screen()) screen_sep.clear();
 
       sg::separator* sep = new sg::separator;
       screen_sep.add(sep);

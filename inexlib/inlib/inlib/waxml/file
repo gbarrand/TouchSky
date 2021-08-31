@@ -30,7 +30,7 @@ public:
     //file_write(fout);
     //fout.close();
 
-    m_writer = new std::ofstream(a_file.c_str());
+    m_writer = new std::ofstream(a_file.c_str(),std::ios::binary);
     if(m_writer->fail()) {
       delete m_writer;
       m_writer = 0;
@@ -38,7 +38,7 @@ public:
     }
 
     waxml::begin(*m_writer);
-    
+
     return true;
   }
   bool close(){
@@ -55,31 +55,31 @@ public:
              const std::string& a_path,
              const std::string& a_name){
     if(!m_writer) return false;
-    return waxml::write(*m_writer,a_o,a_path,a_name);    
+    return waxml::write(*m_writer,a_o,a_path,a_name);
   }
   bool write(const histo::h2d& a_o,
              const std::string& a_path,
              const std::string& a_name){
     if(!m_writer) return false;
-    return waxml::write(*m_writer,a_o,a_path,a_name);    
+    return waxml::write(*m_writer,a_o,a_path,a_name);
   }
   bool write(const histo::h3d& a_o,
              const std::string& a_path,
              const std::string& a_name){
     if(!m_writer) return false;
-    return waxml::write(*m_writer,a_o,a_path,a_name);    
+    return waxml::write(*m_writer,a_o,a_path,a_name);
   }
   bool write(const histo::p1d& a_o,
              const std::string& a_path,
              const std::string& a_name){
     if(!m_writer) return false;
-    return waxml::write(*m_writer,a_o,a_path,a_name);    
+    return waxml::write(*m_writer,a_o,a_path,a_name);
   }
   bool write(const histo::p2d& a_o,
              const std::string& a_path,
              const std::string& a_name){
     if(!m_writer) return false;
-    return waxml::write(*m_writer,a_o,a_path,a_name);    
+    return waxml::write(*m_writer,a_o,a_path,a_name);
   }
 protected:
   std::ofstream* m_writer;

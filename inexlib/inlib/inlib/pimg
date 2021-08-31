@@ -84,7 +84,7 @@ inline bool get_params(const std::vector<std::string>& a_lines,
 }
 
 /*
-//#include "file"
+//#include "file_read"
 inline bool get_params(const std::string& a_path,
                        float& a_ra,float& a_dec,double a_radecs[8],
                        lut<float>& a_lut,SOPI::cmap& a_cmap,

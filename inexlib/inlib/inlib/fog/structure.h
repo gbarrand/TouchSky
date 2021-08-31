@@ -34,7 +34,7 @@ typedef int INDEX_OBJECT;
 class fog_vec4d
 {
 public :
- 
+
   double x;
   double y;
   double z;

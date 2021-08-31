@@ -77,7 +77,7 @@ inline char *ReadFile::subString (char *str, unsigned int start, unsigned int en
     if (sub ==NULL) {
         a_read_success = false;
         return NULL;
-    } 
+    }
     for (i = start; i <= end; i++)
         sub[i - start] = str[i];
     sub[end - start + 1] = '\0';
@@ -189,7 +189,7 @@ inline char *ReadFile::readString (unsigned int nbchar, char *s, int line,int& a
     if (dest ==NULL) {
         a_read_success = false;
         return NULL;
-    } 
+    }
     strncpy (dest, s, nbchar);
     dest[nbchar] = '\0';
     return dest;
@@ -197,7 +197,7 @@ inline char *ReadFile::readString (unsigned int nbchar, char *s, int line,int& a
 
 inline bool sgets(char* a_s,unsigned int a_sz,const char* a_mx,char*& a_pos){
   //a_mx points to the last character.
-  
+
   char* begin = a_pos;
   unsigned int n = 0;
   while(true){
@@ -211,7 +211,7 @@ inline bool sgets(char* a_s,unsigned int a_sz,const char* a_mx,char*& a_pos){
       return true;
     }
     a_pos++;n++;
-  }  
+  }
 }
 
 
@@ -229,7 +229,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     char string [L_MAX];
     char *substr;
     const unsigned int NB_SPACES = 10;
-    
+
     FILE *fich;
     int i, j, line = 0;
     int read_success = true;
@@ -284,7 +284,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (scene->tabcol ==NULL) {
       malloc_error(NB_COLORS() * sizeof (Rgb));
       return EXIT_FAILURE;
-    } 
+    }
     scene->nbcol = NB_COLORS();
 
     for (i = 0; i < NB_COLORS(); i++)
@@ -300,7 +300,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (scene->tabpt ==NULL) {
       malloc_error(scene->nbpt * sizeof (fog_vec4d));
       return EXIT_FAILURE;
-    } 
+    }
 
     for (i = 0; i < scene->nbpt; i++)
     {                           /* loop on points */
@@ -316,9 +316,9 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	substr = subString (string,2 * NB_SPACES, 3 * NB_SPACES - 1,read_success);
         (scene->tabpt[i].z) = readDouble (NB_SPACES,substr, line,read_success);
 	::free(substr);
-	
+
 	if (!read_success) return EXIT_FAILURE;
-    
+
         (scene->tabpt[i].w) = 1.0; /* homogeneous coord */
     }
     POVAMA_DEBUG ("POINT READ OK\n");
@@ -329,7 +329,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (scene->tabface ==NULL) {
       malloc_error(scene->nbface * sizeof (FACE));
       return EXIT_FAILURE;
-    } 
+    }
     for (i = 0; i < scene->nbface; i++)
       {                           /* init */
 	scene->tabface[i].nbpt =0;
@@ -362,7 +362,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	if (scene->tabface[i].tabpt ==NULL) {
           malloc_error(scene->tabface[i].nbpt * sizeof (INDEX_POINT));
 	  return EXIT_FAILURE;
-	} 
+	}
 
         if(!fgets(string,L_MAX,fich)) read_success = false;
 	if (!read_success) return EXIT_FAILURE;
@@ -392,7 +392,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (scene->tabobj ==NULL) {
       malloc_error(scene->nbobj * sizeof (OBJECT));
       return EXIT_FAILURE;
-    } 
+    }
     for (i = 0; i < scene->nbobj; i++) /* init */
       {
 	scene->tabobj[i].nbface =0;
@@ -413,7 +413,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	if (scene->tabobj[i].tabface ==NULL) {
           malloc_error(scene->tabobj[i].nbface * sizeof (INDEX_FACE));
 	  return EXIT_FAILURE;
-	} 
+	}
 
         if(!fgets(string,L_MAX,fich)) read_success = false;
 	if (!read_success) return EXIT_FAILURE;
@@ -443,7 +443,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (scene->tabsv ==NULL) {
       malloc_error(scene->nbsv * sizeof (SVOLUME));
       return EXIT_FAILURE;
-    } 
+    }
     for (i = 0; i < scene->nbsv; i++) /*init */
       {
         scene->tabsv[i].nbobj =0;
@@ -467,7 +467,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	if (scene->tabsv[i].filename == NULL) {
           malloc_error((strlen(name)+1) * sizeof (char));
 	  return EXIT_FAILURE;
-	} 
+	}
 	strcpy (scene->tabsv[i].filename, name);
 
         /* sets the visible property to 0 (nothing is visible) */
@@ -482,7 +482,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	substr = subString (string, NB_SPACES + decal, 2 * NB_SPACES - 1 + decal,read_success);
 	scene->tabsv[i].name = readString (NB_SPACES, substr, line,read_success);
 	::free(substr);
-	
+
 	if (!read_success) {
           ::fprintf (stderr, "readString failed\n");
           return EXIT_FAILURE;
@@ -495,7 +495,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	if (scene->tabsv[i].tabobj ==NULL) {
           malloc_error(scene->tabobj[i].nbface * sizeof (INDEX_FACE));
 	  return EXIT_FAILURE;
-	} 
+	}
         if(!fgets(string,L_MAX,fich)) read_success = false;
 	if (!read_success) {
           ::fprintf (stderr, "fgets failed\n");
@@ -512,7 +512,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
 	    if (!read_success) {
               ::fprintf (stderr, "readInt failed\n");
               return EXIT_FAILURE;
-	    } 
+	    }
 	    if (scene->tabsv[i].tabobj[j] >= scene->nbobj)
             {
                 ::fprintf (stderr, "Obj index too high, max expected: %d\n", scene->nbobj - 1);
@@ -533,7 +533,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
     if (!read_success) {
       ::fprintf (stderr, "we had read errors\n");
       return EXIT_FAILURE;
-    }    
+    }
     return (EXIT_SUCCESS);      /* everything is ok */
 
 }
@@ -550,7 +550,7 @@ inline int ReadFile::readModelisationFile (const char name[], SCENE * scene)
  */
 inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer, const char name[],SCENE * scene)
 {
-  
+
     POVAMA_DEBUG ("ReadFile::addModelisationFile\n");
     const unsigned int L_MAX = 4096;    /* max length of a line */
     char string [L_MAX];
@@ -568,7 +568,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
     /** Test if this file has been already loaded
      * if it is, put all its volumes visible and don't load it again
      */
-    
+
     bool find = false;
     for (i = 0; i < scene->nbsv; i++) {
       if (strcmp(scene->tabsv[i].filename,name) == 0) {
@@ -577,7 +577,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
       }
     }
     if (find == true){
-      printf("not loaded, only set visible  %s\n",name); 
+      printf("not loaded, only set visible  %s\n",name);
       return (EXIT_SUCCESS);      /* everything is ok */
     }
 
@@ -595,7 +595,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
     if (oldScene ==NULL) {
       malloc_error(sizeof (SCENE));
       return EXIT_FAILURE;
-    } 
+    }
     oldScene->nbsv = scene->nbsv;
     oldScene->nbobj = scene->nbobj;
     oldScene->nbface = scene->nbface;
@@ -655,7 +655,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
       scene->nbsv = oldScene->nbsv;
       scene->nbobj = oldScene->nbobj;
       scene->nbface = oldScene->nbface;
-      scene->nbpt = oldScene->nbpt;  
+      scene->nbpt = oldScene->nbpt;
       ::free(oldScene);
       return EXIT_FAILURE;
     }
@@ -699,13 +699,13 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
       scene->nbsv = oldScene->nbsv;
       scene->nbobj = oldScene->nbobj;
       scene->nbface = oldScene->nbface;
-      scene->nbpt = oldScene->nbpt;  
+      scene->nbpt = oldScene->nbpt;
 
       ::free(oldScene);
       return EXIT_FAILURE;
     }
     for (i = oldScene->nbface; i < scene->nbface; i++)             /* init */
-    {              
+    {
 	scene->tabface[i].nbpt =0;
 	scene->tabface[i].tabpt = NULL;
 	scene->tabface[i].n.x= 0.0;
@@ -743,7 +743,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
 	  scene->nbobj = oldScene->nbobj;
 	  ::free(oldScene);
 	  return EXIT_FAILURE;
-	} 
+	}
 
         //if(!fgets(string,L_MAX,fich)) read_success = false;
         if(!sgets(string,L_MAX,bmx,pos)) read_success = false;
@@ -816,7 +816,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
 	  scene->nbsv = oldScene->nbsv;
 	  ::free(oldScene);
 	  return EXIT_FAILURE;
-	} 
+	}
 
         //if(!fgets(string,L_MAX,fich)) read_success = false;
         if(!sgets(string,L_MAX,bmx,pos)) read_success = false;
@@ -882,9 +882,9 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
 	if (scene->tabsv[i].filename == NULL) {
           malloc_error((strlen(name)+1) * sizeof (char));
 	  return EXIT_FAILURE;
-	} 
+	}
 	strcpy (scene->tabsv[i].filename, name);
-	
+
         /* sets the visible property to 0 (nothing is visible) */
         scene->tabsv[i].visible = 1;
 
@@ -910,7 +910,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
           malloc_error(scene->tabsv[i].nbobj * sizeof (INDEX_OBJECT));
 	  ::free(oldScene);
 	  return EXIT_FAILURE;
-	} 
+	}
 
         //if(!fgets(string,L_MAX,fich)) read_success = false;
         if(!sgets(string,L_MAX,bmx,pos)) read_success = false;
@@ -950,7 +950,7 @@ inline int ReadFile::addModelisationFile (unsigned int a_sz,const char* a_buffer
 
 /*
     if (fclose (fich) == EOF)
-    {                           
+    {
         ::fprintf (stderr, "Couldn't close file %s\n", name);
         return (EXIT_FAILURE);
     }

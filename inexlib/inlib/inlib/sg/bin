@@ -27,7 +27,7 @@ inline void bin_elem_number(sg::bin_modeling a_modeling,bool a_draw_edges,
   } else if(a_modeling==bin_lego) {
     a_num_tris += 6*2*3;
     if(a_draw_edges) a_num_segs += 5*4*2;
-  } 
+  }
 }
 
 }}
@@ -64,7 +64,7 @@ inline void bin(bool a_draw_edges,
   a_tris.add_pos_color_normal_allocated(b0,a_color,a_nm);
   a_tris.add_pos_color_normal_allocated(b1,a_color,a_nm);
   a_tris.add_pos_color_normal_allocated(e1,a_color,a_nm);
-  
+
   get_normal(b0,e1,e0,a_nm,tmp1,tmp2);
   a_tris.add_pos_color_normal_allocated(b0,a_color,a_nm);
   a_tris.add_pos_color_normal_allocated(e1,a_color,a_nm);
@@ -231,7 +231,7 @@ inline void bin(sg::bin_modeling a_modeling,
     bin(a_draw_edges,a_color,a_color_edges,a_color_back,b0,b1,b2,b3,e0,e1,e2,e3,a_segs,a_tris,a_nm,tmp1,tmp2);
 
   }
- 
+
 }
 
 }}

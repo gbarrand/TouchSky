@@ -4,24 +4,10 @@
 #ifndef inlib_cbk_ntu
 #define inlib_cbk_ntu
 
-#include "../sg/holder"
-#include "../sg/edvalop"
-#include "../sg/entries"
-#include "../sg/plots"
-#include "../sg/strings"
-#include "../sg/h2plot"
-#include "../sg/gui_params"
+#include "../sg/data2plots"
 
-#include "../rntuple"
-#include "../histo/h1d"
-#include "../histo/h2d"
 #include "../ntu_proj"
-#include "../rroot/cids"
 #include "../col_valop"
-
-#include "../atime2s"
-
-#include "../sg/view_plots"
 
 namespace inlib {
 namespace cbk {
@@ -32,13 +18,13 @@ public:
   static unsigned int action_main()      {return 0;}
 public:
   virtual sg::return_action action() {
-    if(m_action==action_main()) {    
+    if(m_action==action_main()) {
 
       col_valop* col_x = new col_valop(m_ntu,m_edvalop->result());
       std::string col_x_name = "col_x";
-      m_gv.remove_in_tmp_group<col_valop>(col_x_name);    
-      m_gv.add_in_tmp_group<col_valop>(col_x_name,col_x);    
-    
+      m_gv.remove_in_tmp_group<col_valop>(col_x_name);
+      m_gv.add_in_tmp_group<col_valop>(col_x_name,col_x);
+
       double mean,rms;
       unsigned int count;
       if(!col_x->mean_rms(mean,rms,count)){
@@ -47,12 +33,12 @@ public:
         } else {
           m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms failed");
         }
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       double hmn = mean-rms*2;
       double hmx = mean+rms*2;
-  
+
       sg::entries* entries = new sg::entries(m_gv.ttf());
       m_gv.set_style(*entries);
       entries->label = "h1d booking";
@@ -72,7 +58,7 @@ public:
 
       m_gv.show_widget(*this,entries);
 
-    } else if(m_action==action_book()) {    
+    } else if(m_action==action_book()) {
 
       // get booking infos from entries panel :
       std::string htit = m_entries->values[0];
@@ -81,29 +67,29 @@ public:
       if(!to<unsigned int>(m_entries->values[1],xn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double xmn;
       if(!to<double>(m_entries->values[2],xmn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double xmx;
       if(!to<double>(m_entries->values[3],xmx)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       m_entries = 0;
 
       if(!xn) {
         m_gv.map_warn("histo nbin 0");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       if(xmn>=xmx) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"histo mn>=mx");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       m_proj.m_tit = htit;
       m_proj.m_xn = xn;
@@ -113,13 +99,13 @@ public:
       m_proj.m_h_xmx = xmx;
 
       histo::h1d* h = new histo::h1d(htit,xn,xmn,xmx);
-  
+
       atime begin = atime::now();
 
-      if(!m_col->fill_histo(*h)) {
+      if(!m_col->fill_1D(*h)) {
         delete h;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"fill histo failed");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       m_ntu.stop();
@@ -127,11 +113,11 @@ public:
       m_gv.show_console(atime2s(atime::elapsed(begin)));
 
       std::string h_gv_name = "ntu_proj_1D_histo";
-      m_gv.remove_in_tmp_group<histo::h1d>(h_gv_name);    
-      m_gv.add_in_tmp_group<histo::h1d>(h_gv_name,h);    
+      m_gv.remove_in_tmp_group<histo::h1d>(h_gv_name);
+      m_gv.add_in_tmp_group<histo::h1d>(h_gv_name,h);
 
       sg::plot(m_gv,*h,false); //WARNING : false is important.
-  
+
 /*
       ///////////////////////////////////////////////////////////
       /// sliders ///////////////////////////////////////////////
@@ -171,7 +157,7 @@ public:
 
     }
 
-    return sg::return_to_render;     
+    return sg::return_to_render;
   }
 
   virtual sg::bcbk* copy() const {return new proj_1D(*this);}
@@ -214,10 +200,10 @@ protected:
   class slider : public sg::bcbk {
   public:
     virtual sg::return_action action() {
-   
+
       double xspan = 2*(m_proj.m_h_xmx-m_proj.m_h_xmn);
-      if(xspan<=0) return sg::return_none; 
-  
+      if(xspan<=0) return sg::return_none;
+
       bool end_drag = false;
 
       // slider 1 : change xmn booking :
@@ -226,44 +212,44 @@ protected:
       } else if(m_what==11) { //h drag
         double x = m_proj.m_xmn+(m_slider.value.value()-0.5)*xspan;
         if(x<m_proj.m_h_xmx) m_proj.m_h_xmn = x;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==12) { //h end
         m_proj.m_xmn = m_proj.m_h_xmn; //save
         m_slider.value = 0.5f;
         end_drag = true;
-  
+
       // slider 2 : change xmx booking :
       } else if(m_what==20) { //v beg
         m_proj.m_h_xmx = m_proj.m_xmx;
       } else if(m_what==21) { //v drag
         double x = m_proj.m_xmx+(m_slider.value.value()-0.5)*xspan;
         if(x>m_proj.m_h_xmn) m_proj.m_h_xmx = x;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==22) { //v end
         m_proj.m_xmx = m_proj.m_h_xmx;
         m_slider.value = 0.5f;
         end_drag = true;
       }
-  
+
       if(!m_proj.m_xn) return sg::return_none;
       if(m_proj.m_h_xmn>=m_proj.m_h_xmx) return sg::return_none;
-  
+
       m_histo.axis().configure(m_histo.axis().bins(),m_proj.m_h_xmn,m_proj.m_h_xmx);
       m_histo.reset();
-    
-      if(!m_col.fill_histo(m_histo)) {
+
+      if(!m_col.fill_1D(m_histo)) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"fill histo failed");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
-  
+
       if(end_drag) m_ntu.stop();
 
       sg::plots* plots = scene_plots(m_gv);
       if(plots) plots->current_plotter().touch();
 
       //m_gv.show_sliders();
-  
-      return sg::return_to_render;     
+
+      return sg::return_to_render;
     }
     virtual sg::bcbk* copy() const {return new slider(*this);}
   public:
@@ -310,12 +296,12 @@ protected:
     col_valop& m_col;
     unsigned int m_what;
   };
-*/  
+*/
 protected:
   sg::gui_viewer& m_gv;
   ntu_proj& m_proj;
   read::intuple& m_ntu;
-public: // per action parameters :  
+public: // per action parameters :
   sg::entries* m_entries; //not owner.
   sg::edvalop* m_edvalop;
   //read::icolumn<double>* m_col;
@@ -328,17 +314,17 @@ public:
   static unsigned int action_main()      {return 0;}
 public:
   virtual sg::return_action action() {
-    if(m_action==action_main()) {    
+    if(m_action==action_main()) {
 
       col_valop* col_x = new col_valop(m_ntu,m_entries->get_valop(0));
       std::string col_x_name = "col_x";
-      m_gv.remove_in_tmp_group<col_valop>(col_x_name);    
-      m_gv.add_in_tmp_group<col_valop>(col_x_name,col_x);    
+      m_gv.remove_in_tmp_group<col_valop>(col_x_name);
+      m_gv.add_in_tmp_group<col_valop>(col_x_name,col_x);
 
       col_valop* col_y = new col_valop(m_ntu,m_entries->get_valop(1));
       std::string col_y_name = "col_y";
-      m_gv.remove_in_tmp_group<col_valop>(col_y_name);    
-      m_gv.add_in_tmp_group<col_valop>(col_y_name,col_y);    
+      m_gv.remove_in_tmp_group<col_valop>(col_y_name);
+      m_gv.add_in_tmp_group<col_valop>(col_y_name,col_y);
 
       double x_min,x_max;
 
@@ -350,7 +336,7 @@ public:
         } else {
           m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms for x failed");
         }
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       x_min = mean-rms*2;
       x_max = mean+rms*2;}
@@ -365,7 +351,7 @@ public:
         } else {
           m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms for y failed");
         }
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       y_min = mean-rms*2;
       y_max = mean+rms*2;}
@@ -390,7 +376,7 @@ public:
 
       m_gv.show_widget(*this,entries);
 
-    } else if(m_action==action_book()) {    
+    } else if(m_action==action_book()) {
 
       // get booking infos from entries panel :
       std::string htit = m_entries->values[0];
@@ -399,57 +385,57 @@ public:
       if(!to<unsigned int>(m_entries->values[1],xn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double xmn;
       if(!to<double>(m_entries->values[2],xmn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double xmx;
       if(!to<double>(m_entries->values[3],xmx)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       unsigned int yn;
       if(!to<unsigned int>(m_entries->values[4],yn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double ymn;
       if(!to<double>(m_entries->values[5],ymn)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       double ymx;
       if(!to<double>(m_entries->values[6],ymx)) {
         m_entries = 0;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       m_entries = 0;
 
       if(!xn) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"histo xn 0");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       if(xmn>=xmx) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"histo xmn>=xmx");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       if(!yn) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"histo yn 0");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       if(ymn>=ymx) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"histo ymn>=ymx");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
       m_proj.m_tit = htit;
 
@@ -469,10 +455,10 @@ public:
 
       atime begin = atime::now();
 
-      if(!fill_histo(m_ntu,*m_col_x,*m_col_y,*h)) {
+      if(!fill_2D(m_ntu,*m_col_x,*m_col_y,*h)) {
         delete h;
         m_gv.pop_warn(m_popup,m_ex,m_ey,"fill histo failed");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       m_ntu.stop();
@@ -480,11 +466,11 @@ public:
       m_gv.show_console(atime2s(atime::elapsed(begin)));
 
       std::string h_gv_name = "ntu_proj_2D_histo";
-      m_gv.remove_in_tmp_group<histo::h2d>(h_gv_name);    
-      m_gv.add_in_tmp_group<histo::h2d>(h_gv_name,h);    
+      m_gv.remove_in_tmp_group<histo::h2d>(h_gv_name);
+      m_gv.add_in_tmp_group<histo::h2d>(h_gv_name,h);
 
       sg::plot(m_gv,*h,false); //WARNING : false is important.
-  
+
 /*
       ///////////////////////////////////////////////////////////
       /// sliders ///////////////////////////////////////////////
@@ -545,7 +531,7 @@ public:
       if(!m_popup) m_gv.hide_main_menu();
     }
 
-    return sg::return_to_render;     
+    return sg::return_to_render;
   }
 
   virtual sg::bcbk* copy() const {return new proj_2D(*this);}
@@ -588,12 +574,12 @@ protected:
   class slider : public sg::bcbk {
   public:
     virtual sg::return_action action() {
-   
+
       double xspan = 2*(m_proj.m_h_xmx-m_proj.m_h_xmn);
-      if(xspan<=0) return sg::return_none; 
+      if(xspan<=0) return sg::return_none;
       double yspan = 2*(m_proj.m_h_ymx-m_proj.m_h_ymn);
-      if(yspan<=0) return sg::return_none; 
-  
+      if(yspan<=0) return sg::return_none;
+
       bool end_drag = false;
 
       // slider 1 : change xmn booking :
@@ -602,19 +588,19 @@ protected:
       } else if(m_what==11) {
         double x = m_proj.m_xmn+(m_slider.value.value()-0.5)*xspan;
         if(x<m_proj.m_h_xmx) m_proj.m_h_xmn = x;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==12) {
         m_proj.m_xmn = m_proj.m_h_xmn; //save
         m_slider.value = 0.5f;
         end_drag = true;
-  
+
       // slider 2 : change xmx booking :
       } else if(m_what==20) {
         m_proj.m_h_xmx = m_proj.m_xmx;
       } else if(m_what==21) {
         double x = m_proj.m_xmx+(m_slider.value.value()-0.5)*xspan;
         if(x>m_proj.m_h_xmn) m_proj.m_h_xmx = x;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==22) {
         m_proj.m_xmx = m_proj.m_h_xmx;
         m_slider.value = 0.5f;
@@ -626,50 +612,50 @@ protected:
       } else if(m_what==31) {
         double y = m_proj.m_ymn+(m_slider.value.value()-0.5)*yspan;
         if(y<m_proj.m_h_ymx) m_proj.m_h_ymn = y;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==32) {
         m_proj.m_ymn = m_proj.m_h_ymn; //save
         m_slider.value = 0.5f;
         end_drag = true;
-  
+
       // slider 4 : change ymx booking :
       } else if(m_what==40) {
         m_proj.m_h_ymx = m_proj.m_ymx;
       } else if(m_what==41) {
         double y = m_proj.m_ymx+(m_slider.value.value()-0.5)*yspan;
         if(y>m_proj.m_h_ymn) m_proj.m_h_ymx = y;
-        else return sg::return_none;                 
+        else return sg::return_none;
       } else if(m_what==42) {
         m_proj.m_ymx = m_proj.m_h_ymx;
         m_slider.value = 0.5f;
         end_drag = true;
 
       }
-  
+
       if(!m_proj.m_xn) return sg::return_none;
       if(m_proj.m_h_xmn>=m_proj.m_h_xmx) return sg::return_none;
       if(!m_proj.m_yn) return sg::return_none;
       if(m_proj.m_h_ymn>=m_proj.m_h_ymx) return sg::return_none;
-  
+
       m_histo.axis_x().configure
         (m_histo.axis_x().bins(),m_proj.m_h_xmn,m_proj.m_h_xmx);
       m_histo.axis_y().configure
         (m_histo.axis_y().bins(),m_proj.m_h_ymn,m_proj.m_h_ymx);
       m_histo.reset();
-    
-      if(!fill_histo(m_ntu,m_col_x,m_col_y,m_histo)) {
+
+      if(!fill_2D(m_ntu,m_col_x,m_col_y,m_histo)) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"fill histo failed");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
-	  
+
       if(end_drag) m_ntu.stop();
 
       sg::plots* plots = scene_plots(m_gv);
       if(plots) plots->current_plotter().touch();
 
       //m_gv.show_sliders();
-  
-      return sg::return_to_render;     
+
+      return sg::return_to_render;
     }
     virtual sg::bcbk* copy() const {return new slider(*this);}
   public:
@@ -720,7 +706,7 @@ protected:
     col_valop& m_col_y;
     unsigned int m_what;
   };
-*/  
+*/
 protected:
   sg::gui_viewer& m_gv;
   ntu_proj& m_proj;
@@ -731,6 +717,496 @@ public: // per action parameters :
   //read::icolumn<double>* m_col_y;
   col_valop* m_col_x;
   col_valop* m_col_y;
+};
+
+class proj_3D : public sg::acbk, public sg::pos_data {
+  static unsigned int action_book()      {return 1;}
+public:
+  static unsigned int action_main()      {return 0;}
+public:
+  virtual sg::return_action action() {
+    if(m_action==action_main()) {
+
+      col_valop* col_x = new col_valop(m_ntu,m_entries->get_valop(0));
+      std::string col_x_name = "col_x";
+      m_gv.remove_in_tmp_group<col_valop>(col_x_name);
+      m_gv.add_in_tmp_group<col_valop>(col_x_name,col_x);
+
+      col_valop* col_y = new col_valop(m_ntu,m_entries->get_valop(1));
+      std::string col_y_name = "col_y";
+      m_gv.remove_in_tmp_group<col_valop>(col_y_name);
+      m_gv.add_in_tmp_group<col_valop>(col_y_name,col_y);
+
+      col_valop* col_z = new col_valop(m_ntu,m_entries->get_valop(2));
+      std::string col_z_name = "col_z";
+      m_gv.remove_in_tmp_group<col_valop>(col_z_name);
+      m_gv.add_in_tmp_group<col_valop>(col_z_name,col_z);
+
+      double x_min,x_max;
+     {double mean,rms;
+      unsigned int count;
+      if(!col_x->mean_rms(mean,rms,count)){
+        if(!count) {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"no entries for x");
+        } else {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms for x failed");
+        }
+        return sg::return_to_render;
+      }
+      x_min = mean-rms*2;
+      x_max = mean+rms*2;}
+
+      double y_min,y_max;
+     {double mean,rms;
+      unsigned int count;
+      if(!col_y->mean_rms(mean,rms,count)){
+        if(!count) {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"no entries for y");
+        } else {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms for y failed");
+        }
+        return sg::return_to_render;
+      }
+      y_min = mean-rms*2;
+      y_max = mean+rms*2;}
+
+      double z_min,z_max;
+     {double mean,rms;
+      unsigned int count;
+      if(!col_z->mean_rms(mean,rms,count)){
+        if(!count) {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"no entries for z");
+        } else {
+          m_gv.pop_warn(m_popup,m_ex,m_ey,"find mean rms for z failed");
+        }
+        return sg::return_to_render;
+      }
+      z_min = mean-rms*2;
+      z_max = mean+rms*2;}
+
+      sg::entries* entries = new sg::entries(m_gv.ttf());
+      m_gv.set_style(*entries);
+      entries->label = "3d booking";
+
+      entries->add_string("title",col_x->name()+" / "+col_y->name()+" / "+col_z->name());
+      entries->add_uint("x_num",100);
+      entries->add_double("x_min",x_min);
+      entries->add_double("x_max",x_max);
+      entries->add_uint("y_num",100);
+      entries->add_double("y_min",y_min);
+      entries->add_double("y_max",y_max);
+      entries->add_uint("z_num",100);
+      entries->add_double("z_min",z_min);
+      entries->add_double("z_max",z_max);
+
+      proj_3D* _cbk = new proj_3D(m_gv,m_proj,m_ntu,action_book(),*this);
+      _cbk->m_entries = entries;
+      _cbk->m_col_x = col_x;
+      _cbk->m_col_y = col_y;
+      _cbk->m_col_z = col_z;
+      entries->add_callback(_cbk);
+
+      m_gv.show_widget(*this,entries);
+
+    } else if(m_action==action_book()) {
+
+      // get booking infos from entries panel :
+      std::string htit = m_entries->values[0];
+
+      unsigned int xn;
+      if(!to<unsigned int>(m_entries->values[1],xn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double xmn;
+      if(!to<double>(m_entries->values[2],xmn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double xmx;
+      if(!to<double>(m_entries->values[3],xmx)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+
+      unsigned int yn;
+      if(!to<unsigned int>(m_entries->values[4],yn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double ymn;
+      if(!to<double>(m_entries->values[5],ymn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double ymx;
+      if(!to<double>(m_entries->values[6],ymx)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+
+      unsigned int zn;
+      if(!to<unsigned int>(m_entries->values[7],zn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double zmn;
+      if(!to<double>(m_entries->values[8],zmn)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+      double zmx;
+      if(!to<double>(m_entries->values[9],zmx)) {
+        m_entries = 0;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"not a number");
+        return sg::return_to_render;
+      }
+
+      m_entries = 0;
+
+      if(!xn) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo xn 0");
+        return sg::return_to_render;
+      }
+      if(xmn>=xmx) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo xmn>=xmx");
+        return sg::return_to_render;
+      }
+
+      if(!yn) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo yn 0");
+        return sg::return_to_render;
+      }
+      if(ymn>=ymx) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo ymn>=ymx");
+        return sg::return_to_render;
+      }
+
+      if(!zn) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo zn 0");
+        return sg::return_to_render;
+      }
+      if(zmn>=zmx) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"histo zmn>=zmx");
+        return sg::return_to_render;
+      }
+      m_proj.m_tit = htit;
+
+      m_proj.m_xn = xn;
+      m_proj.m_xmn = xmn;
+      m_proj.m_xmx = xmx;
+      m_proj.m_h_xmn = xmn;
+      m_proj.m_h_xmx = xmx;
+
+      m_proj.m_yn = yn;
+      m_proj.m_ymn = ymn;
+      m_proj.m_ymx = ymx;
+      m_proj.m_h_ymn = ymn;
+      m_proj.m_h_ymx = ymx;
+
+      m_proj.m_zn = zn;
+      m_proj.m_zmn = zmn;
+      m_proj.m_zmx = zmx;
+      m_proj.m_h_zmn = zmn;
+      m_proj.m_h_zmx = zmx;
+
+      histo::c3d* h = new histo::c3d(htit);
+      atime begin = atime::now();
+      if(!fill_3D(m_ntu,*m_col_x,*m_col_y,*m_col_z,*h)) {
+        delete h;
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"fill cloud 3D failed");
+        return sg::return_to_render;
+      }
+      m_ntu.stop();
+      m_gv.show_console(atime2s(atime::elapsed(begin)));
+      std::string h_gv_name = "ntu_proj_3D_cloud";
+      m_gv.remove_in_tmp_group<histo::c3d>(h_gv_name);
+      m_gv.add_in_tmp_group<histo::c3d>(h_gv_name,h);
+      sg::plotter* _plotter = sg::plot(m_gv,*h,false); //WARNING : false is important.
+      if(_plotter) {
+        _plotter->shape = sg::plotter::xyz;
+        _plotter->shape_automated = false;
+
+        _plotter->x_axis_automated = false;
+        _plotter->x_axis_min = float(xmn);
+        _plotter->x_axis_max = float(xmx);
+
+        _plotter->y_axis_automated = false;
+        _plotter->y_axis_min = float(ymn);
+        _plotter->y_axis_max = float(ymx);
+
+        _plotter->z_axis_automated = false;
+        _plotter->z_axis_min = float(zmn);
+        _plotter->z_axis_max = float(zmx);
+
+        _plotter->points_style(0).color = colorf_blue();
+        _plotter->points_style(0).modeling = sg::modeling_markers();
+        _plotter->points_style(0).marker_size = 7;
+       //_plotter->points_style(0).marker_style = sg::marker_dot;
+        _plotter->points_style(0).marker_style = sg::marker_cross;
+      }
+/*
+      ///////////////////////////////////////////////////////////
+      /// sliders ///////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////
+      //m_gv.show_sliders();
+      m_gv.set_sliders_pos(sg::gui_params::s_sliders_2b_2l());
+
+      ///////////////////////////////////////////////////////////
+      /// X min, max ////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////
+     {sg::slider& _slider = m_gv.slider_1();
+      _slider.value = 0.5f;
+      _slider.clear_cbks();
+      _slider.add_begin_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,10));
+      _slider.add_drag_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,11));
+      _slider.add_end_callback
+     (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,12));}
+
+     {sg::slider& _slider = m_gv.slider_2();
+      _slider.value = 0.5f;
+      _slider.clear_cbks();
+      _slider.add_begin_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,20));
+      _slider.add_drag_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,21));
+      _slider.add_end_callback
+     (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,22));}
+
+      ///////////////////////////////////////////////////////////
+      /// Y min, max ////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////
+     {sg::slider& _slider = m_gv.slider_3();
+      _slider.value = 0.5f;
+      _slider.clear_cbks();
+      _slider.add_begin_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,30));
+      _slider.add_drag_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,31));
+      _slider.add_end_callback
+     (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,32));}
+
+     {sg::slider& _slider = m_gv.slider_4();
+      _slider.value = 0.5f;
+      _slider.clear_cbks();
+      _slider.add_begin_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,40));
+      _slider.add_drag_callback
+      (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,41));
+      _slider.add_end_callback
+     (new slider(m_gv,m_proj,*h,_slider,m_ntu,*m_col_x,*m_col_y,42));}
+*/
+      ///////////////////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////
+
+      if(!m_popup) m_gv.hide_main_menu();
+    }
+
+    return sg::return_to_render;
+  }
+
+  virtual sg::bcbk* copy() const {return new proj_3D(*this);}
+public:
+  proj_3D(sg::gui_viewer& a_gv,ntu_proj& a_proj,read::intuple& a_ntu,unsigned int a_action,const sg::pos_data& a_data)
+  :sg::acbk(a_action)
+  ,sg::pos_data(a_data)
+  ,m_gv(a_gv)
+  ,m_proj(a_proj)
+  ,m_ntu(a_ntu)
+
+  ,m_entries(0)
+  ,m_col_x(0)
+  ,m_col_y(0)
+  ,m_col_z(0)
+  {}
+  virtual ~proj_3D(){}
+protected:
+  proj_3D(const proj_3D& a_from)
+  :sg::acbk(a_from)
+  ,sg::pos_data(a_from)
+  ,m_gv(a_from.m_gv)
+  ,m_proj(a_from.m_proj)
+  ,m_ntu(a_from.m_ntu)
+
+  ,m_entries(a_from.m_entries)
+  ,m_col_x(a_from.m_col_x)
+  ,m_col_y(a_from.m_col_y)
+  ,m_col_z(a_from.m_col_z)
+  {}
+  proj_3D& operator=(const proj_3D& a_from){
+    sg::acbk::operator=(a_from);
+    sg::pos_data::operator=(a_from);
+
+    m_entries = a_from.m_entries;
+    m_col_x = a_from.m_col_x;
+    m_col_y = a_from.m_col_y;
+    m_col_z = a_from.m_col_z;
+    return *this;
+  }
+protected:
+/*
+  class slider : public sg::bcbk {
+  public:
+    virtual sg::return_action action() {
+
+      double xspan = 2*(m_proj.m_h_xmx-m_proj.m_h_xmn);
+      if(xspan<=0) return sg::return_none;
+      double yspan = 2*(m_proj.m_h_ymx-m_proj.m_h_ymn);
+      if(yspan<=0) return sg::return_none;
+
+      bool end_drag = false;
+
+      // slider 1 : change xmn booking :
+      if(m_what==10) {
+        m_proj.m_h_xmn = m_proj.m_xmn;
+      } else if(m_what==11) {
+        double x = m_proj.m_xmn+(m_slider.value.value()-0.5)*xspan;
+        if(x<m_proj.m_h_xmx) m_proj.m_h_xmn = x;
+        else return sg::return_none;
+      } else if(m_what==12) {
+        m_proj.m_xmn = m_proj.m_h_xmn; //save
+        m_slider.value = 0.5f;
+        end_drag = true;
+
+      // slider 2 : change xmx booking :
+      } else if(m_what==20) {
+        m_proj.m_h_xmx = m_proj.m_xmx;
+      } else if(m_what==21) {
+        double x = m_proj.m_xmx+(m_slider.value.value()-0.5)*xspan;
+        if(x>m_proj.m_h_xmn) m_proj.m_h_xmx = x;
+        else return sg::return_none;
+      } else if(m_what==22) {
+        m_proj.m_xmx = m_proj.m_h_xmx;
+        m_slider.value = 0.5f;
+        end_drag = true;
+
+      // slider 3 : change ymn booking :
+      } else if(m_what==30) {
+        m_proj.m_h_ymn = m_proj.m_ymn;
+      } else if(m_what==31) {
+        double y = m_proj.m_ymn+(m_slider.value.value()-0.5)*yspan;
+        if(y<m_proj.m_h_ymx) m_proj.m_h_ymn = y;
+        else return sg::return_none;
+      } else if(m_what==32) {
+        m_proj.m_ymn = m_proj.m_h_ymn; //save
+        m_slider.value = 0.5f;
+        end_drag = true;
+
+      // slider 4 : change ymx booking :
+      } else if(m_what==40) {
+        m_proj.m_h_ymx = m_proj.m_ymx;
+      } else if(m_what==41) {
+        double y = m_proj.m_ymx+(m_slider.value.value()-0.5)*yspan;
+        if(y>m_proj.m_h_ymn) m_proj.m_h_ymx = y;
+        else return sg::return_none;
+      } else if(m_what==42) {
+        m_proj.m_ymx = m_proj.m_h_ymx;
+        m_slider.value = 0.5f;
+        end_drag = true;
+
+      }
+
+      if(!m_proj.m_xn) return sg::return_none;
+      if(m_proj.m_h_xmn>=m_proj.m_h_xmx) return sg::return_none;
+      if(!m_proj.m_yn) return sg::return_none;
+      if(m_proj.m_h_ymn>=m_proj.m_h_ymx) return sg::return_none;
+
+      m_histo.axis_x().configure
+        (m_histo.axis_x().bins(),m_proj.m_h_xmn,m_proj.m_h_xmx);
+      m_histo.axis_y().configure
+        (m_histo.axis_y().bins(),m_proj.m_h_ymn,m_proj.m_h_ymx);
+      m_histo.reset();
+
+      if(!fill_2D(m_ntu,m_col_x,m_col_y,m_histo)) {
+        m_gv.pop_warn(m_popup,m_ex,m_ey,"fill histo failed");
+        return sg::return_to_render;
+      }
+
+      if(end_drag) m_ntu.stop();
+
+      sg::plots* plots = scene_plots(m_gv);
+      if(plots) plots->current_plotter().touch();
+
+      //m_gv.show_sliders();
+
+      return sg::return_to_render;
+    }
+    virtual sg::bcbk* copy() const {return new slider(*this);}
+  public:
+    slider(sg::gui_viewer& a_gv,
+               ntu_proj& a_proj,
+               histo::h2d& a_histo,
+               sg::slider& a_slider,
+               read::intuple& a_ntu,
+               //read::icolumn<double>& a_col_x,
+               //read::icolumn<double>& a_col_y,
+               col_valop& a_col_x,
+               col_valop& a_col_y,
+               col_valop& a_col_z,
+               unsigned int a_what)
+    :m_gv(a_gv)
+    ,m_proj(a_proj)
+    ,m_histo(a_histo)
+    ,m_slider(a_slider)
+    ,m_ntu(a_ntu)
+    ,m_col_x(a_col_x)
+    ,m_col_y(a_col_y)
+    ,m_col_z(a_col_z)
+    ,m_what(a_what)
+    {}
+    virtual ~slider(){}
+  public:
+    slider(const slider& a_from)
+    :sg::bcbk(a_from)
+    ,m_gv(a_from.m_gv)
+    ,m_proj(a_from.m_proj)
+    ,m_histo(a_from.m_histo)
+    ,m_slider(a_from.m_slider)
+    ,m_ntu(a_from.m_ntu)
+    ,m_col_x(a_from.m_col_x)
+    ,m_col_y(a_from.m_col_y)
+    ,m_col_z(a_from.m_col_z)
+    ,m_what(a_from.m_what)
+    {}
+    slider& operator=(const slider& a_from){
+      sg::bcbk::operator=(a_from);
+      m_what = a_from.m_what;
+      return *this;
+    }
+  protected:
+    sg::gui_viewer& m_gv;
+    ntu_proj& m_proj;
+    histo::h2d& m_histo;
+    sg::slider& m_slider;
+    read::intuple& m_ntu;
+    col_valop& m_col_x;
+    col_valop& m_col_y;
+    col_valop& m_col_z;
+    unsigned int m_what;
+  };
+*/
+protected:
+  sg::gui_viewer& m_gv;
+  ntu_proj& m_proj;
+  read::intuple& m_ntu;
+public: // per action parameters :
+  sg::entries* m_entries; //not owner.
+  //read::icolumn<double>* m_col_x;
+  //read::icolumn<double>* m_col_y;
+  col_valop* m_col_x;
+  col_valop* m_col_y;
+  col_valop* m_col_z;
 };
 
 class choose_proj : public sg::acbk, public sg::pos_data {
@@ -744,7 +1220,7 @@ public:
       col_valop::workable_cols(m_ntu,wkcols);
       if(wkcols.empty()) {
         m_gv.pop_warn(m_popup,m_ex,m_ey,"no workable columns found");
-        return sg::return_to_render;     
+        return sg::return_to_render;
       }
 
       std::string proj = m_entries->values[0];
@@ -763,13 +1239,13 @@ public:
         node->add_callback(_cbk);
 
         m_gv.show_widget(*this,node);
-        return sg::return_to_render;     
-  
-      } else { //2D
+        return sg::return_to_render;
+
+      } else if(proj==sg::s_2D()) {
 
         sg::entries* entries = new sg::entries(m_gv.ttf());
         m_gv.set_style(*entries);
-  
+
         sg::edvalop& edvalop = entries->edvalop();
         edvalop.edit_what = sg::edvalop::edit_ntuple;
         edvalop.vars.set_values(wkcols);
@@ -777,19 +1253,41 @@ public:
 
         entries->add_math("X bind",valop::def());
         entries->add_math("Y bind",valop::def());
-  
-        //if(opts.size()>=100) entries->list_visible_items = 20;        
-  
+
+        //if(opts.size()>=100) entries->list_visible_items = 20;
+
         proj_2D* _cbk = new proj_2D(m_gv,m_proj,m_ntu,action_main(),*this);
         _cbk->m_entries = entries;
         entries->add_callback(_cbk);
-  
+
         m_gv.show_widget(*this,entries);
-        return sg::return_to_render;     
+        return sg::return_to_render;
+
+      } else { //3D
+        sg::entries* entries = new sg::entries(m_gv.ttf());
+        m_gv.set_style(*entries);
+
+        sg::edvalop& edvalop = entries->edvalop();
+        edvalop.edit_what = sg::edvalop::edit_ntuple;
+        edvalop.vars.set_values(wkcols);
+        edvalop.vars_label = "columns";
+
+        entries->add_math("X bind",valop::def());
+        entries->add_math("Y bind",valop::def());
+        entries->add_math("Z bind",valop::def());
+
+        //if(opts.size()>=100) entries->list_visible_items = 20;
+
+        proj_3D* _cbk = new proj_3D(m_gv,m_proj,m_ntu,action_main(),*this);
+        _cbk->m_entries = entries;
+        entries->add_callback(_cbk);
+
+        m_gv.show_widget(*this,entries);
+        return sg::return_to_render;
       }
     }
 
-    return sg::return_none;     
+    return sg::return_none;
   }
 
   virtual sg::bcbk* copy() const {return new choose_proj(*this);}
@@ -799,7 +1297,7 @@ public:
   ,sg::pos_data(a_data)
   ,m_gv(a_gv)
   ,m_proj(a_proj)
-  ,m_ntu(a_ntu)  
+  ,m_ntu(a_ntu)
   ,m_entries(0)
   {}
   virtual ~choose_proj(){}

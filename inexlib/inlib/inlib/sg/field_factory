@@ -38,7 +38,7 @@ public:
     if(rcmp(a_cls,sf_vec2f::s_class())) return new sf_vec2f();
     if(rcmp(a_cls,sf_vec3f::s_class())) return new sf_vec3f();
     if(rcmp(a_cls,hep::sf_polyhedron::s_class())) return new hep::sf_polyhedron();
-  
+
     INLIB_NEW_SF(unsigned char) //gl::mode_t
     INLIB_NEW_SF(unsigned int)
     INLIB_NEW_SF(int)
@@ -46,18 +46,18 @@ public:
     INLIB_NEW_SF(double)
     INLIB_NEW_SF(bool)
     INLIB_NEW_SF(unsigned short) //sg::lpat
-  
+
     if(rcmp(a_cls,sf_img<byte>::s_class())) return new sf_img<byte>();
     if(rcmp(a_cls,sf_enum<int16>::s_class())) return new sf_enum<int16>();
-  
+
     ///////////////////////////////////////////
     /// mf ////////////////////////////////////
     ///////////////////////////////////////////
     if(rcmp(a_cls,mf_string::s_class())) return new mf_string();
     if(rcmp(a_cls,mf_list_item::s_class())) return new mf_list_item();
-  
+
     INLIB_NEW_MF(float)
-  
+
     typedef unsigned int unichar;
     if(rcmp(a_cls,mf_std_vec<unichar>::s_class())) return new mf_std_vec<unichar>();
     if(rcmp(a_cls,mf_std_vec<float>::s_class())) return new mf_std_vec<float>();

@@ -21,7 +21,7 @@ inline bool from_osc(buffer& a_buffer,const std::string& a_cls,H& a_histo){
   if(!a_buffer.read_version(v,s,c)) return false;
 
   std::string name;
-  std::string title;  
+  std::string title;
   if(!Named_stream(a_buffer,name,title)) return false;
 
   member_reader mr(a_buffer);

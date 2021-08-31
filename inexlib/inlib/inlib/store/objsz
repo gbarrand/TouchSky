@@ -131,7 +131,7 @@ public:
   }
 
 /*
-  virtual bool visit_double(const std::string&,const Slash::Store::IArray& aData){ 
+  virtual bool visit_double(const std::string&,const Slash::Store::IArray& aData){
     Slash::Store::IArray::Orders orders = aData.orders();
     fCurrent += size_int() + orders.size()*size_int();
     unsigned int array_sz = 1;
@@ -148,7 +148,7 @@ public:
   }
 */
 
-  virtual bool visit(const std::string&,const istorable& aData){ 
+  virtual bool visit(const std::string&,const istorable& aData){
     // WARNING : can't be called in a object.visit()
     //   over a aData being a "super" of "object" .
     objsz madd;
@@ -157,7 +157,7 @@ public:
       return false;
     }
     fCurrent += madd.size();
-    return true;  
+    return true;
   }
 
 

@@ -132,7 +132,7 @@ inline bool cfitsio_zoom_data(unsigned int a_cols,unsigned int a_rows,const char
         *npos = 0;npos++;
       }
     }}
-   
+
     // zoom data :
     // zoom buffer is centered on the center of the data image.
    {T* dpos = (T*)a_buffer;
@@ -162,11 +162,11 @@ inline bool cfitsio_zoom_data(unsigned int a_cols,unsigned int a_rows,const char
         zpos++;npos++;
       }
     }}
-  
+
     delete [] nbuffer;
 
     return true;
-}    
+}
 
 }
 
@@ -200,11 +200,11 @@ inline bool cfitsio_array2img(std::ostream& a_out,
               << std::endl;
         return false;
       }
-  
+
       if(a_yswap) {
         T* dpos = (T*)a_buffer;
         for(unsigned int iy=0;iy<a_rows;iy++) {
-          unsigned char* vpos = vbuffer+bpp*a_cols*(a_rows-1-iy);      
+          unsigned char* vpos = vbuffer+bpp*a_cols*(a_rows-1-iy);
           for(unsigned int ix=0;ix<a_cols;ix++) {
             vlut = a_lut.apply(float(*dpos));
             if(vlut>=a_colors.size()) {
@@ -223,7 +223,7 @@ inline bool cfitsio_array2img(std::ostream& a_out,
       } else {
         T* dpos = (T*)a_buffer;
         for(unsigned int iy=0;iy<a_rows;iy++) {
-          unsigned char* vpos = vbuffer+bpp*a_cols*iy;      
+          unsigned char* vpos = vbuffer+bpp*a_cols*iy;
           for(unsigned int ix=0;ix<a_cols;ix++) {
             vlut = a_lut.apply(float(*dpos));
             if(vlut>=a_colors.size()) {
@@ -240,7 +240,7 @@ inline bool cfitsio_array2img(std::ostream& a_out,
           }
         }
       }
-  
+
       a_img.set(a_cols,a_rows,bpp,vbuffer,true);
 
     } else {
@@ -274,11 +274,11 @@ inline bool cfitsio_array2img(std::ostream& a_out,
         return false;
       }
 
-      unsigned char* vpos;  
+      unsigned char* vpos;
       if(a_yswap) {
         VT* zpos = zbuffer;
         for(unsigned int iy=0;iy<vis_rows;iy++) {
-          vpos = vbuffer+bpp*vis_cols*(vis_rows-1-iy);      
+          vpos = vbuffer+bpp*vis_cols*(vis_rows-1-iy);
           for(unsigned int ix=0;ix<vis_cols;ix++) {
             vlut = a_lut.apply(float(*zpos));
             if(vlut>=a_colors.size()) {
@@ -297,7 +297,7 @@ inline bool cfitsio_array2img(std::ostream& a_out,
       } else {
         VT* zpos = zbuffer;
         for(unsigned int iy=0;iy<vis_rows;iy++) {
-          vpos = vbuffer+bpp*vis_cols*iy;      
+          vpos = vbuffer+bpp*vis_cols*iy;
           for(unsigned int ix=0;ix<vis_cols;ix++) {
             vlut = a_lut.apply(float(*zpos));
             if(vlut>=a_colors.size()) {
@@ -314,9 +314,9 @@ inline bool cfitsio_array2img(std::ostream& a_out,
           }
         }
       }
-    
+
       delete [] zbuffer;
-  
+
       a_img.set(vis_cols,vis_rows,bpp,vbuffer,true);
 
     } //end a_zoom==1

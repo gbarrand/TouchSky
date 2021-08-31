@@ -35,7 +35,7 @@ inline bool array_to_img(std::ostream& a_out,
           << std::endl;
     return false;
   }
-  
+
   size_t vlut;
 
   if(a_yswap) {

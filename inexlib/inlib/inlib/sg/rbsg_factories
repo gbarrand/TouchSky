@@ -11,6 +11,7 @@
 #include "_switch"
 #include "arrow_button"
 #include "atb_vertices"
+#include "colored_sized_points"
 #include "axis"
 #include "back_area"
 //#include "base_camera"
@@ -22,6 +23,8 @@
 #include "button_grid"
 #include "circle"
 #include "circle_arc"
+#include "ellipse"
+#include "xy_grid"
 #include "colback"
 #include "color"
 #include "colors"
@@ -84,6 +87,7 @@
 #include "text_hershey_marker"
 #include "text_style"
 #include "torche"
+#include "blend"
 #include "vertices"
 #include "xmas_tree"
 #include "field_cut"
@@ -165,16 +169,28 @@ inline void add_factory_ui_time(bsg_factories& a_fac) {
 template <class T>
 inline node* create_node_wget_catalog_ttf_marker(fac_args& a_args,bool& a_composite) {
   const wget* simbad_wget = a_args.get_simbad_wget();
-  if(!simbad_wget) return 0;
+  if(!simbad_wget) {
+    a_args.out() << "inlib::sg:create_node_wget_catalog_ttf_marker :"
+                 << " a_args.get_simbad_wget() failed." << std::endl;
+    return 0;
+  }
   const wget* stars_wget = a_args.get_stars_wget();
-  if(!stars_wget) return 0;
+  if(!stars_wget) {
+    a_args.out() << "inlib::sg:create_node_wget_catalog_ttf_marker :"
+                 << " a_args.get_stars_wget() failed." << std::endl;
+    return 0;
+  }
   SDSS::catalog* stars_catalog = a_args.get_stars_catalog();
-  if(!stars_catalog) return 0;
+  if(!stars_catalog) {
+    a_args.out() << "inlib::sg:create_node_wget_catalog_ttf_marker :"
+                 << " a_args.get_stars_catalog() failed." << std::endl;
+    return 0;
+  }
   std::string stars_host;
   a_args.get_stars_host(stars_host);
   std::string stars_dir;
   a_args.get_stars_dir(stars_dir);
-  a_composite = false;  
+  a_composite = false;
   return new T(a_args.ttf_marker(),
                *simbad_wget,
                a_args.get_stars_local(),*stars_wget,stars_host,a_args.get_stars_port(),stars_dir,
@@ -208,6 +224,7 @@ inline void add_factories(bsg_factories& a_fac) {
   a_fac.add_factory_composite<inlib::sg::_switch>();
   a_fac.add_factory<inlib::sg::arrow_button>();
   a_fac.add_factory<inlib::sg::atb_vertices>();
+  a_fac.add_factory<inlib::sg::colored_sized_points>();
   add_factory_ttf<inlib::sg::axis>(a_fac);
   a_fac.add_factory<inlib::sg::back_area>();
 //  a_fac.add_factory<inlib::sg::base_camera>();
@@ -219,6 +236,8 @@ inline void add_factories(bsg_factories& a_fac) {
 //  a_fac.add_factory<inlib::sg::button_grid>();
   a_fac.add_factory<inlib::sg::circle>();
   a_fac.add_factory<inlib::sg::circle_arc>();
+  a_fac.add_factory<inlib::sg::ellipse>();
+  a_fac.add_factory<inlib::sg::xy_grid>();
   a_fac.add_factory<inlib::sg::colback>();
   a_fac.add_factory<inlib::sg::color>();
   add_factory_ttf<inlib::sg::colors>(a_fac);
@@ -281,6 +300,7 @@ inline void add_factories(bsg_factories& a_fac) {
   a_fac.add_factory<inlib::sg::text_hershey_marker>();
   a_fac.add_factory<inlib::sg::text_style>();
   a_fac.add_factory<inlib::sg::torche>();
+  a_fac.add_factory<inlib::sg::blend>();
   a_fac.add_factory<inlib::sg::vertices>();
   a_fac.add_factory<inlib::sg::xmas_tree>();
   a_fac.add_factory<inlib::sg::field_cut>();

@@ -5,12 +5,18 @@
 #define inlib_net_wget
 
 #include "../wget"
+
 #include "http"
+
+#ifdef INLIB_MEM
+#include "../mem"
+#endif
 
 namespace inlib {
 namespace net {
 
 class wget : public virtual inlib::wget {
+  typedef inlib::wget parent;
 public:
   INLIB_SCLASS(inlib::net::wget)
 public:
@@ -51,7 +57,7 @@ public:
 #endif
   }
 public:
-  wget(const wget& a_from):inlib::wget(a_from),m_out(a_from.m_out){
+  wget(const wget& a_from):parent(a_from),m_out(a_from.m_out){
 #ifdef INLIB_MEM
     mem::increment(s_class().c_str());
 #endif

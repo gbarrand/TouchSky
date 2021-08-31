@@ -29,7 +29,7 @@ public:
   mf_vec<colorf,float> colors;
 
   sf<float> hmax; //max bin height (if draw_lego)
-  sf<bool> yswap; 
+  sf<bool> yswap;
   sf<unsigned int> zoom;
 
   enum _modeling {
@@ -42,9 +42,9 @@ public:
   sf_enum<_modeling> modeling;
 
   // not editable :
+  mf<char> buffer;
   sf<unsigned int> columns;
   sf<unsigned int> rows;
-  mf<char> buffer;
   sf_enum<cfitsio_bitpix_code> bitpix;
 
   sf_string infos;
@@ -57,13 +57,13 @@ public:
         INLIB_ARG_ENUM(auto_lut_min_max),
         INLIB_ARG_ENUM(auto_lut_mean_rms)
       INLIB_ARG_FIELD_DESC_ENUMS_END,
-      
+
       INLIB_ARG_FIELD_DESC(lut),
       INLIB_ARG_FIELD_DESC(colors),
       INLIB_ARG_FIELD_DESC(hmax),
       INLIB_ARG_FIELD_DESC(yswap),
       INLIB_ARG_FIELD_DESC(zoom),
-      
+
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(modeling,5)
         INLIB_ARG_ENUM(model_image),
         INLIB_ARG_ENUM(model_flat_point),
@@ -75,7 +75,7 @@ public:
       INLIB_ARG_FIELD_DESC_NOT_EDITABLE(buffer),
       INLIB_ARG_FIELD_DESC_NOT_EDITABLE(columns),
       INLIB_ARG_FIELD_DESC_NOT_EDITABLE(rows),
-      
+
       INLIB_ARG_FIELD_DESC_NOT_EDITABLE_ENUMS_BEG(bitpix,6)
         "byte_img",byte_img,
         "short_img",short_img,
@@ -84,7 +84,7 @@ public:
         "float_img",float_img,
         "double_img",double_img
       INLIB_ARG_FIELD_DESC_ENUMS_END,
-      
+
       INLIB_ARG_FIELD_DESC_NOT_EDITABLE(infos)
     );
     return s_v;
@@ -106,13 +106,13 @@ private:
   }
 public:
   cfitsio()
-  :parent() 
+  :parent()
   ,auto_lut(auto_lut_none)
   ,lut()
   ,colors()
   ,hmax(0)
-  ,yswap(false)  
-  ,zoom(1)  
+  ,yswap(false)
+  ,zoom(1)
   ,modeling(model_image)
   ,buffer()
   ,columns(0)
@@ -128,7 +128,7 @@ public:
   virtual ~cfitsio(){}
 public:
   cfitsio(const cfitsio& a_from)
-  :parent(a_from) 
+  :parent(a_from)
   ,auto_lut(a_from.auto_lut)
   ,lut(a_from.lut)
   ,colors(a_from.colors)
@@ -174,7 +174,7 @@ public:
       m_tris.render(a_action);
       m_segs.render(a_action);
       a_action.set_polygon_offset(a_action.state().m_GL_POLYGON_OFFSET_FILL);
-    }     
+    }
   }
   virtual void pick(pick_action& a_action) {
     look_update_sg(a_action.out(),a_action.state());
@@ -184,7 +184,7 @@ public:
       nodekit_pick(a_action,m_pts,this);
       nodekit_pick(a_action,m_segs,this);
       nodekit_pick(a_action,m_tris,this);
-    }     
+    }
   }
   virtual void bbox(bbox_action& a_action) {
     look_update_sg(a_action.out(),a_action.state());
@@ -194,7 +194,7 @@ public:
       m_pts.bbox(a_action);
       m_segs.bbox(a_action);
       m_tris.bbox(a_action);
-    }     
+    }
   }
 public:
   //void get_min_max_mean_rms(double& a_min,double& a_max,double& a_mean,double& a_rms) {
@@ -216,14 +216,14 @@ public:
 
     std::string sdata;
     if(!buffer2value(a_out,x,y,sdata)) {}
- 
+
     a_s.clear();
     if(sdata.size())  a_s += "data "+sdata;
     if(scolor.size()) {
       if(a_s.size()) a_s += ", ";
       a_s += "color "+scolor;
     }
-   
+
     return a_s.size()?true:false;
   }
 protected:
@@ -283,7 +283,7 @@ protected:
     }
 
     if(modeling.value()==model_image) {
- 
+
       if(buffer.size()) {
         const char* dbuffer = vec_data(buffer.values());
         img_byte& _img = img.value();
@@ -557,7 +557,7 @@ protected:
         *npos = 0;npos++;
       }
     }}
-   
+
     // zoom data :
     // zoom buffer is centered on the center of the data image.
    {T* dpos = (T*)a_buffer;
@@ -587,11 +587,11 @@ protected:
         zpos++;npos++;
       }
     }}
-  
+
     delete [] nbuffer;
 
     return true;
-  }    
+  }
 
 public:
   template <class HISTO>
@@ -625,5 +625,3 @@ protected:
 }}
 
 #endif
-
-//inlib_build_use inlib

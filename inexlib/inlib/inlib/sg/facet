@@ -8,6 +8,7 @@
 #include "sf"
 #include "render_action"
 #include "pick_action"
+#include "bbox_action"
 
 namespace inlib {
 namespace sg {
@@ -33,16 +34,20 @@ private:
   }
 public:
   virtual void render(render_action& a_action) {
-    float tris[18];float nms[18];  
+    float tris[18];float nms[18];
     _tris(tris,nms);
     a_action.draw_vertex_normal_array(gl::triangles(),18,tris,nms);
   }
   virtual void pick(pick_action& a_action) {
-    float tris[18];float nms[18];  
+    float tris[18];float nms[18];
     _tris(tris,nms);
     a_action.add__triangles(*this,18,tris,true);
   }
-
+  virtual void bbox(bbox_action& a_action) {
+    float front[12];
+    _faces(front);
+    a_action.add_points(12,front);
+  }
 public:
   facet()
   :parent()
@@ -176,7 +181,7 @@ protected:
     lines[21] = front[0];
     lines[22] = front[1];
     lines[23] = front[2];
-  }   
+  }
 
 };
 

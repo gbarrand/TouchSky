@@ -38,8 +38,9 @@ public:
   virtual void begin_anim() {
     set_translate(position.value());
   }
-  virtual void end_anim() {
-    m_ui.add_work_cbks(m_end_cbks.callbacks(),true);    
+  virtual bool end_anim() {
+    m_ui.add_work_cbks(m_end_cbks.callbacks(),true);
+    return true;
   }
 public:
   sf_vec3f position;

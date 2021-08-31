@@ -44,9 +44,9 @@
  * NB: each piece of information is on NB_SPACES spaces
  *
  */
- 
 
-class ReadFile 
+
+class ReadFile
 {
 private:
 
@@ -54,7 +54,7 @@ private:
     static double readDouble (unsigned int nbchar, char * s, int line,int&);
     static char * readString (unsigned int nbchar, char * s, int line,int&);
     static char * subString (char *str, unsigned int start, unsigned int end,int&);
- 
+
 public:
 
     static int readModelisationFile (const char name[], SCENE * scene);

@@ -13,6 +13,7 @@ namespace rroot {
 
 class dumfac : public virtual ifac {
 public: //ifac
+  virtual std::ostream& out() const {return m_out;}
   virtual iro* create(const std::string& a_class,const args&) {
     m_out << "inlib::rroot::dumfac::create :"
           << " dummy. Can't create object of class \"" << a_class << "\"."

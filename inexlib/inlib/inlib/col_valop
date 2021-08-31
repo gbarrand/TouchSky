@@ -8,7 +8,7 @@
 #include "valop2s"
 #include "valop_exec"
 //#include "mnmx"
-#include "histo/h1d"
+#include <cmath>
 
 #ifdef INLIB_MEM
 #include "mem"
@@ -41,7 +41,7 @@ public:
   }
 public:
   virtual const std::string& name() const {return m_name;}
-  virtual bool get_entry(double& a_value) const { 
+  virtual bool get_entry(double& a_value) const {
     value ret;
     if(!get_value(ret)) {a_value=0;return false;}
     if(ret.is_array()) {a_value=0;return false;}
@@ -68,7 +68,7 @@ protected:
   ,parent(a_from)
   ,m_ntu(a_from.m_ntu)
   ,m_valop(a_from.m_valop)
-  { 
+  {
 #ifdef INLIB_MEM
     mem::increment(s_class().c_str());
 #endif
@@ -82,7 +82,7 @@ protected:
 public:
   //read::intuple& ntu() {return m_ntu;}
 
-  bool get_value(value& a_ret) const { 
+  bool get_value(value& a_ret) const {
     //std::vector<value> input(m_vars.size());
 
     col_valop& self = const_cast<col_valop&>(*this);
@@ -132,7 +132,7 @@ public:
     return true;
   }
 
-  bool mean_rms(double& a_mean,double& a_rms,unsigned int& a_count) const { 
+  bool mean_rms(double& a_mean,double& a_rms,unsigned int& a_count) const {
 
     a_mean = 0;
     a_rms = 0;
@@ -150,7 +150,7 @@ public:
         //::printf("debug : col_valop::mean_rms : get_value() failed.\n");
         return false;
       }
-  
+
       if(ret.is_array()) {
         switch(ret.type()){
         //case ARRAY_UNSIGNED_SHORT:
@@ -225,7 +225,7 @@ public:
         //case ARRAY_BOOL:
         //case ARRAY_STRING:
         default:
-          //::printf("debug : col_valop::mean_rms : array : unknow type\n");
+          //::printf("debug : col_valop::mean_rms : array : unknown type\n");
           return false;
         };
 
@@ -265,7 +265,8 @@ public:
     return true;
   }
 
-  bool fill_histo(histo::h1d& a_histo) const {
+  template <class HIST>
+  bool fill_1D(HIST& a_histo) const {
     m_ntu.start();
     while(m_ntu.next()){
 
@@ -302,7 +303,7 @@ public:
         //case ARRAY_BOOL:
         //case ARRAY_STRING:
         default:
-          //::printf("debug : col_valop::visit : array : unknow type\n");
+          //::printf("debug : col_valop::visit : array : unknown type\n");
           return false;
         };
       } else {
@@ -330,7 +331,7 @@ public:
         a_v.push_back((*it)->name());
       }
     }
-  } 
+  }
 
 protected:
   void initialize(){  // analyse m_valop :
@@ -350,7 +351,7 @@ protected:
     for(it=v.m_nodes.begin();it!=v.m_nodes.end();++it){
 
       //::printf("debug : \"%s\" %d\n",
-      //   (*it)->m_name.c_str(),(*it)->m_index);      
+      //   (*it)->m_name.c_str(),(*it)->m_index);
 
       bool found = false;
      {std::vector< std::pair<icol_t*,int> >::const_iterator pit;
@@ -373,11 +374,11 @@ protected:
               m_cols.push_back(std::pair<icol_t*,int>(*cit,(*it)->m_index));
               break;
             }
-          } 
+          }
         }
       }
     }}
-    
+
   }
 protected:
   read::intuple& m_ntu;
@@ -389,25 +390,18 @@ protected:
   std::vector<value> m_input;
 };
 
-}
-
-#include "histo/h2d"
-
-namespace inlib {
-
-inline bool fill_histo(read::intuple& a_ntu,
-                       const col_valop& a_x,const col_valop& a_y,
-                       histo::h2d& a_histo) {
+template <class HIST>
+inline bool fill_2D(read::intuple& a_ntu,const col_valop& a_x,const col_valop& a_y,HIST& a_histo) {
 
   a_ntu.start();
   while(a_ntu.next()){
 
     value x_ret;
     if(!a_x.get_value(x_ret)) return false;
-  
+
     value y_ret;
     if(!a_y.get_value(y_ret)) return false;
-  
+
     if(!x_ret.is_array()&&!y_ret.is_array()) {
       double x;
       if(!x_ret.to_double(x)) return false;
@@ -458,7 +452,7 @@ inline bool fill_histo(read::intuple& a_ntu,
         break;
       //case ARRAY_STRING:
       default:
-        //::printf("debug : col_valop::visit : array : unknow type\n");
+        //::printf("debug : col_valop::visit : array : unknown type\n");
         return false;
       };
 #undef INLIB_COL_VALOP_FILL
@@ -507,7 +501,7 @@ inline bool fill_histo(read::intuple& a_ntu,
         break;
       //case ARRAY_STRING:
       default:
-        //::printf("debug : col_valop::visit : array : unknow type\n");
+        //::printf("debug : col_valop::visit : array : unknown type\n");
         return false;
       };
 #undef INLIB_COL_VALOP_FILL2
@@ -582,6 +576,41 @@ inline bool fill_histo(read::intuple& a_ntu,
 
       continue;
     }
+
+  }
+
+  return true;
+}
+
+template <class HIST>
+inline bool fill_3D(read::intuple& a_ntu,const col_valop& a_x,const col_valop& a_y,const col_valop& a_z,HIST& a_h) {
+
+  a_ntu.start();
+  while(a_ntu.next()){
+
+    value x_ret;
+    if(!a_x.get_value(x_ret)) return false;
+
+    value y_ret;
+    if(!a_y.get_value(y_ret)) return false;
+
+    value z_ret;
+    if(!a_z.get_value(z_ret)) return false;
+
+    if(!x_ret.is_array()&&!y_ret.is_array()&&!z_ret.is_array()) {
+      double x;
+      if(!x_ret.to_double(x)) return false;
+      double y;
+      if(!y_ret.to_double(y)) return false;
+      double z;
+      if(!z_ret.to_double(z)) return false;
+      a_h.fill(x,y,z);
+      continue;
+    } else {
+      return false;
+    }
+
+    //FIXME : handle is_array.
 
   }
 

@@ -23,7 +23,7 @@ inline bool lines_to_keyvals(const std::vector<std::string>& a_lines,
     std::string value = line.substr(pos+1,line.size()-(pos+1));
     a_keyvals.push_back(std::pair<std::string,std::string>(key,value));
   }
-  return true;  
+  return true;
 }
 
 }

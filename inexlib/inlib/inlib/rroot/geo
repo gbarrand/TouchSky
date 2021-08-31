@@ -9,6 +9,8 @@
 #include "shape2ph"
 #include "geo_volume"
 #include "geo_node_matrix"
+#include "geo_pattern_finder"
+#include "geo_node_offset"
 
 #include "../sg/polyhedron"
 
@@ -52,7 +54,7 @@ public:
   }
 public:
   virtual void update_sg(std::ostream& a_out) {
-    begin_update_sg(a_out);
+    if(!begin_update_sg(a_out)) return;
 
     unsigned int depth = 0;
 
@@ -66,9 +68,7 @@ public:
     end_update_sg(a_out);
   }
 
-  virtual const std::string& volume_name(const geo_volume& a_vol) const {
-    return a_vol.name();
-  }
+  virtual const std::string& volume_name(const geo_volume& a_vol) const {return a_vol.name();}
 
   virtual bool volume_material_color(std::ostream& a_out,const geo_volume& a_vol,colorf& a_color) {
     short coli = a_vol.line_color();
@@ -78,18 +78,14 @@ public:
             << " not found in colormap."
             << std::endl;
       a_color = color.value();
-      return false;    
+      return false;
     }
     return true;
   }
 
-  virtual bool add_shape(std::ostream& a_out,
-                         const geo_volume& a_vol,
-                         const mat4f& a_matrix,
-                         sg::separator& a_sep,
-                         bool a_solid) {
+  virtual bool add_shape(std::ostream& a_out,const geo_volume& a_vol,const mat4f& a_matrix,sg::separator& a_sep,bool a_solid) {
     if(!sep_add_shape(a_out,a_sep,*(a_vol.shape()),a_matrix,a_solid)) {
-      a_out << "inlib::rroot::geo::add_shape :" 
+      a_out << "inlib::rroot::geo::add_shape :"
             << " sep_add_shape failed."
             << " vol " << a_vol.name()
             << " shape " << a_vol.shape()->s_cls()
@@ -100,18 +96,15 @@ public:
     return true;
   }
 
-  virtual bool vis_children(std::ostream& a_out,
-                            const geo_volume& a_vol,
-                            const mat4f& a_matrix,
-                            unsigned int a_depth) {
+  virtual bool vis_children(std::ostream& a_out,const geo_volume& a_vol,const mat4f& a_matrix,unsigned int a_depth) {
 
     const std::vector<geo_node*>* nodes = a_vol.nodes();
     if(!nodes) return true;
 
     inlib_vforcit(geo_node*,*nodes,it) {
-  
+
       const geo_node* _node = *it;
-  
+
       if(_node->mother()!=(&a_vol)) {
         a_out << "inlib::rroot::vis_children :"
               << " mother mismatch."
@@ -120,22 +113,22 @@ public:
               << " node cls " << _node->s_cls()
               << std::endl;
       }
-  
+
       mat4f& mtx = m_mtxs[a_depth+1];
 
       if(const geo_node_matrix* node_matrix = id_cast<geo_node,geo_node_matrix>(*_node)){
-  
+
         const geo_volume* vol = node_matrix->volume();
-  
+
         const geo_matrix* gmtx = node_matrix->matrix();
-  
+
         if(cast_matrix<geo_identity>(*gmtx)) {
           if(!_vis_volume(a_out,*vol,a_matrix,a_depth+1)) return false;
 
         } else if(const geo_hmatrix* ghmatrix = cast_matrix<geo_hmatrix>(*gmtx)) {
-         
+
           // The below matches what is done in TEveTrans::SetFrom()
-  
+
           const double* sc = ghmatrix->scale();
           const double* tr = ghmatrix->trans();
           const double* rt = ghmatrix->matrix();
@@ -144,12 +137,12 @@ public:
          float(rt[3]*sc[0]),float(rt[4]*sc[1]),float(rt[5]*sc[2]),float(tr[1]),
          float(rt[6]*sc[0]),float(rt[7]*sc[1]),float(rt[8]*sc[2]),float(tr[2]),
                           0,                 0,                 0,          1);
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
         } else {
           mtx = a_matrix;
           if(!mul_mtx(a_out,*gmtx,mtx)) {
-            a_out << "inlib::rroot::geo::vis_children :" 
+            a_out << "inlib::rroot::geo::vis_children :"
                   << " mul_mtx failed."
                   << " vol " << vol->name()
                   << " shape " << vol->shape()->s_cls()
@@ -157,11 +150,11 @@ public:
           }
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
         }
-  
+
       } else if(const geo_node_offset* node_offset = id_cast<geo_node,geo_node_offset>(*_node)){
-  
+
         const geo_pattern_finder* pf = node_offset->finder();
-  
+
         //a_out << " dummy : geo_node_offset : pattern_finder :"
         //          << " step " << pf->step()
         //          << " start " << pf->start()
@@ -172,17 +165,17 @@ public:
         //          << " volname " << node_offset->volume()->name()
         //          << " pf_matrix_cls " << pf->matrix()->s_cls()
         //          << std::endl;
-  
+
         const geo_volume* vol = node_offset->volume();
-  
+
         //int ndiv = pf->divisions();
-  
-        //double offset = pf->start()+node_offset->index()*pf->step();       
+
+        //double offset = pf->start()+node_offset->index()*pf->step();
         double offset = node_offset->offset(); //???
-  
-        if(//const geo_pattern_cyl_phi* cyl_phi = 
+
+        if(//const geo_pattern_cyl_phi* cyl_phi =
                cast_pattern_finder<geo_pattern_cyl_phi>(*pf)){
-  
+
           offset *= deg2rad();
           //const geo_matrix* gmtx = pf->matrix();
 
@@ -190,95 +183,94 @@ public:
 
           //mul_mtx(*gmtx,mtx); //???
           mtx.mul_rotate(0,0,1,float(offset));
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
-        } else if(//const geo_pattern_x* patx = 
+
+        } else if(//const geo_pattern_x* patx =
            cast_pattern_finder<geo_pattern_x>(*pf)){
-  
+
           mtx = a_matrix;
 
           mtx.mul_translate(float(offset),0,0);
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
-        } else if(//const geo_pattern_y* paty = 
+
+        } else if(//const geo_pattern_y* paty =
            cast_pattern_finder<geo_pattern_y>(*pf)){
-  
+
           mtx = a_matrix;
 
           mtx.mul_translate(0,float(offset),0);
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
+
         } else if(const geo_pattern_z* patz = cast_pattern_finder<geo_pattern_z>(*pf)){
-  
+
           mtx = a_matrix;
 
-          mtx.mul_translate(0,0,
-                          patz->is_reflected()?-float(offset):-float(offset));
-  
+          mtx.mul_translate(0,0,patz->is_reflected()?-float(offset):float(offset));
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
-        } else if(//const geo_pattern_para_x* parx = 
+
+        } else if(//const geo_pattern_para_x* parx =
                     cast_pattern_finder<geo_pattern_para_x>(*pf)){
 
           mtx = a_matrix;
 
           // See TGeoPatternParaX::cd().
           mtx.mul_translate(float(offset),0,0);
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
+
         } else if(const geo_pattern_para_y* pary = cast_pattern_finder<geo_pattern_para_y>(*pf)){
 
           mtx = a_matrix;
 
           // See TGeoPatternParaY::cd().
           mtx.mul_translate(float(offset*pary->txy()),float(offset),0);
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
+
         } else if(const geo_pattern_para_z* parz = cast_pattern_finder<geo_pattern_para_z>(*pf)){
-  
+
           mtx = a_matrix;
 
           // See TGeoPatternParaY::cd().
           mtx.mul_translate(float(offset*parz->txz()),
                             float(offset*parz->tyz()),
                             parz->is_reflected()?-float(offset):float(offset));
-  
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
+
         } else if(const geo_pattern_trap_z* trapz = cast_pattern_finder<geo_pattern_trap_z>(*pf)){
-  
+
           mtx = a_matrix;
 
           // See TGeoPatternTrapZ::cd().
           mtx.mul_translate(float(offset*trapz->txz()),
                             float(offset*trapz->tyz()),
-                           trapz->is_reflected()?-float(offset):float(offset));
-  
+                            trapz->is_reflected()?-float(offset):float(offset));
+
           if(!_vis_volume(a_out,*vol,mtx,a_depth+1)) return false;
-  
-        } else if(//const geo_pattern_cyl_r* cyl_r = 
+
+        } else if(//const geo_pattern_cyl_r* cyl_r =
                   cast_pattern_finder<geo_pattern_cyl_r>(*pf)){
 
           //NOTE : from what we understand in TGeoTube::Divide,
           //       we have nothing to do.
           if(!_vis_volume(a_out,*vol,a_matrix,a_depth+1)) return false;
-  
+
         } else {
           a_out << " dummy : geo_node_offset : " << pf->s_cls()
                     << ", vol : " << vol->name()
                     << ", shape : " << vol->shape()->s_cls()
                     << std::endl;
         }
-  
+
       } else {
-  
+
         a_out << " iro " << (*it)->s_cls() << std::endl;
-  
+
       }
     }
 
@@ -289,13 +281,13 @@ protected:
   /////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////
-  
+
   bool sep_add_shape(std::ostream& a_out,
                             sg::separator& a_sep,
                             const geo_shape& a_shape,
                             const mat4f& a_matrix,
                             bool a_solid) {
-  
+
     //::printf("debug : %s\n",a_shape.s_cls().c_str());
 
     sg::polyhedron* _node = m_check_shapes?&m_check_node:new sg::polyhedron();
@@ -334,7 +326,7 @@ protected:
       }
       m_phs.clear();
     }
-  
+
     return true;
   }
 

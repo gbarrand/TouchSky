@@ -31,7 +31,7 @@ inline bool open_image_file(sg::gui_viewer& a_gv,
           return false;
         }
         if((w*h*bpp)>a_mem_limit) {
-  
+
           //unsigned int sw;
           //unsigned int sh;
           //float aspect = float(w)/float(h);
@@ -42,7 +42,7 @@ inline bool open_image_file(sg::gui_viewer& a_gv,
           //  sw = 2;
           //  sh = sw/aspect;
           //}
-    
+
           unsigned int sw = 2;
           unsigned int sh = 2;
           while(true) {
@@ -50,10 +50,10 @@ inline bool open_image_file(sg::gui_viewer& a_gv,
             sw *=2;
             sh *=2;
           }
-    
+
           unsigned int sx = (w-sw)/2;
           unsigned int sy = (h-sh)/2;
-    
+
           buffer = a_reader.read_part(out,a_path,sx,sy,sw,sh,w,h,bpp);
         } else {
           buffer = a_reader.read(out,a_path,w,h,bpp);
@@ -61,7 +61,7 @@ inline bool open_image_file(sg::gui_viewer& a_gv,
     } else {
       buffer = a_reader.read(out,a_path,w,h,bpp);
     }
-  
+
     if(!buffer) {
       out << "inlib::opener::open :"
           << " for file " << sout(a_path)
@@ -73,11 +73,11 @@ inline bool open_image_file(sg::gui_viewer& a_gv,
 
     inlib::img<inlib::byte> img(w,h,bpp,buffer,true);
 
-    load_img(a_gv,img,colorf_lightgrey());
+    load_img(a_gv,img,colorf_default());
 
     //if(!a_args.is_arg(sg::s_no_hide_menu())) a_gv.hide_main_menu();
     a_gv.hide_main_menu();
-    
+
     return true;
 }
 

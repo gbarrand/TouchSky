@@ -109,11 +109,11 @@ public:
     return *this;
   }
 protected:
-  void update_sg(){    
+  void update_sg(){
     m_sz = 0;
     delete [] m_vts;
     delete [] m_nms;
-    
+
     int nslice =
       (int)(float(number_of_triangles)*sweep_angle.value()/ftwo_pi());
     if(nslice<3) nslice = 3;

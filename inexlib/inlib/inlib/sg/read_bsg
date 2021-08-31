@@ -12,7 +12,8 @@
 #include "mf"
 
 #include "../io/brbuf"
-#include "../file"
+#include "../file_read"
+#include "../fileis"
 #include "../sout"
 #include "../sto"
 #include "../platform"
@@ -21,7 +22,7 @@ namespace inlib {
 namespace sg {
 
 class read_bsg : public read_action {
-  typedef read_action parent;
+  INLIB_ACTION(read_bsg,inlib::sg::read_bsg,read_action)
 protected:
   typedef bsg_factories::factory factory;
 public:
@@ -69,7 +70,7 @@ protected:
     m_verbose = a_from.m_verbose;
     m_brbuf.reset_pos();
     m_protocol = 0;
-    m_group = 0;    
+    m_group = 0;
     return *this;
   }
 public:
@@ -116,7 +117,7 @@ public:
     if(!file::is_bsg(7,header)) {
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " bad signature."
-            << std::endl;        
+            << std::endl;
       return false;
     }
 
@@ -124,7 +125,7 @@ public:
     if(!m_brbuf.read(byte_swap_at_write)) return false;
     bool is_little_endian_at_write;
     if(!m_brbuf.read(is_little_endian_at_write)) return false;
-  
+
     //::printf("debug : 002 : bswp %d endia %d\n",
     //    byte_swap_at_write,is_little_endian_at_write);
 
@@ -143,7 +144,7 @@ public:
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " inlib_version " << _inlib_version
             << ",protocol " << m_protocol
-            << std::endl;        
+            << std::endl;
     }
 
     uint64 pos_desc = 0;
@@ -160,7 +161,7 @@ public:
 
       mf_std_vec<std::string> desc;
       if(!desc.read(m_brbuf)) {
-        m_out << "inlib::sg::read_bsg::load_buffer : can't read node descriptions." << std::endl;        
+        m_out << "inlib::sg::read_bsg::load_buffer : can't read node descriptions." << std::endl;
         m_protocol = 0;
         return false;
       }
@@ -169,7 +170,7 @@ public:
         const std::vector<std::string>& _v = *it;
         int nfield = (int(_v.size())-3)/3;
         if((nfield*3+3)!=int(_v.size())) {
-          m_out << "inlib::sg::read_bsg::load_buffer : unexpected node desc vector entries." << std::endl;        
+          m_out << "inlib::sg::read_bsg::load_buffer : unexpected node desc vector entries." << std::endl;
           m_rndesc.clear();
           m_protocol = 0;
           return false;
@@ -183,7 +184,7 @@ public:
           m_out << "inlib::sg::read_bsg::load_buffer :"
                 << " mismatch field number for class "
                 << sout(s_cls) << ". " << nfield << " " << _nfield << "."
-                << std::endl;        
+                << std::endl;
           m_rndesc.clear();
           m_protocol = 0;
           return false;
@@ -221,25 +222,25 @@ public:
     if(!m_brbuf.read_std_string(node_cls_name)) {
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " can't read string."
-            << std::endl;        
+            << std::endl;
       return false;
     }
-  
+
     unsigned int node_cls_version;
     if(!m_brbuf.read(node_cls_version)) {
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " can't read string."
-            << std::endl;        
+            << std::endl;
       return false;
     }
 
     //::printf("debug : read_bsg : 004 : %s\n",node_cls_name.c_str());
-    
+
    {factory rder = m_factories.find_factory(node_cls_name);
     if(!rder) {
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " factory not found for " << sout(node_cls_name)
-            << std::endl;        
+            << std::endl;
       return false;
     }
     bool composite = false;
@@ -247,21 +248,21 @@ public:
     if(!_node) {
       m_out << "inlib::sg::read_bsg::load_buffer :"
             << " factory failed for " << sout(node_cls_name)
-            << std::endl;        
+            << std::endl;
       return false;
     }
     if(composite) {
       if(!_read_composite(_node,m_brbuf,m_out,m_verbose,*this)) {
         m_out << "inlib::sg::read_bsg::load_buffer :"
               << " read failed for " << sout(node_cls_name)
-              << std::endl;        
+              << std::endl;
         return false;
       }
     } else{
       if(!_read_node(_node,m_brbuf,m_out,m_verbose,*this)) {
         m_out << "inlib::sg::read_bsg::load_buffer :"
               << " read failed for " << sout(node_cls_name)
-              << std::endl;        
+              << std::endl;
         return false;
       }
     }}
@@ -272,16 +273,16 @@ public:
       if(m_brbuf.length()!=uint32(pos_desc)) {
         m_out << "inlib::sg::read_bsg::load_buffer :"
               << " WARNING : brbuf not at begin of streamer infos."
-              << std::endl;        
+              << std::endl;
       }
     } else {
       if(m_brbuf.remaining()>0) {
         m_out << "inlib::sg::read_bsg::load_buffer :"
               << " WARNING : brbuf not empty."
-              << std::endl;        
+              << std::endl;
       }
     }
-  
+
     return true;
   }
 
@@ -310,7 +311,7 @@ protected:
       return false;
     }
     if(node_end!=s_node_end()) {
-      a_out << "inlib::read_bsg::_read_node : " << a_node->s_cls() << " " << node_end << " not node_end." << std::endl;        
+      a_out << "inlib::read_bsg::_read_node : " << a_node->s_cls() << " " << node_end << " not node_end." << std::endl;
       delete a_node;
       a_node = 0;
       return false;
@@ -332,7 +333,7 @@ protected:
       return false;
     }
 
-    group* grp = safe_cast<node,group>(*a_node);    
+    group* grp = safe_cast<node,group>(*a_node);
     if(!grp) {
       a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " is not a group." << std::endl;
       delete a_node;
@@ -346,7 +347,7 @@ protected:
     while(true) {
       std::string node_cls_name;
       if(!a_buf.read_std_string(node_cls_name)) {
-        a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " can't read node_cls." << std::endl;        
+        a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " can't read node_cls." << std::endl;
         a_action.m_group = old_group;
         delete a_node;
         a_node = 0;
@@ -357,7 +358,7 @@ protected:
 
       unsigned int node_cls_version;
       if(!a_buf.read(node_cls_version)) {
-        a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " can't read class version." << std::endl;        
+        a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " can't read class version." << std::endl;
         a_action.m_group = old_group;
         delete a_node;
         a_node = 0;
@@ -365,11 +366,11 @@ protected:
       }
 
       //::printf("debug : read_bsg : 1004 : %s\n",node_cls_name.c_str());
-  
+
      {factory rder = a_action.m_factories.find_factory(node_cls_name);
       if(!rder) {
         a_out << "inlib::read_bsg::_read_composite : " << a_node->s_cls() << " factory not found for " << sout(node_cls_name)
-              << std::endl;        
+              << std::endl;
         a_action.m_group = old_group;
         delete a_node;
         a_node = 0;
@@ -378,7 +379,7 @@ protected:
       bool composite = false;
       node* _node = rder(a_action.m_args,composite);
       if(!_node) {
-        a_out << "inlib::read_bsg::_read_composite : factory failed for " << sout(node_cls_name) << std::endl;        
+        a_out << "inlib::read_bsg::_read_composite : factory failed for " << sout(node_cls_name) << std::endl;
         a_action.m_group = old_group;
         delete a_node;
         a_node = 0;
@@ -386,7 +387,7 @@ protected:
       }
       if(composite) {
         if(!_read_composite(_node,a_buf,a_out,a_verbose,a_action)) {
-          a_out << "inlib::read_bsg::_read_composite : failed for " << sout(node_cls_name) << std::endl;        
+          a_out << "inlib::read_bsg::_read_composite : failed for " << sout(node_cls_name) << std::endl;
           a_action.m_group = old_group;
           delete a_node;
           a_node = 0;
@@ -394,7 +395,7 @@ protected:
         }
       } else{
         if(!_read_node(_node,a_buf,a_out,a_verbose,a_action)) {
-          a_out << "inlib::read_bsg::_read_composite : failed for " << sout(node_cls_name) << std::endl;        
+          a_out << "inlib::read_bsg::_read_composite : failed for " << sout(node_cls_name) << std::endl;
           a_action.m_group = old_group;
           delete a_node;
           a_node = 0;

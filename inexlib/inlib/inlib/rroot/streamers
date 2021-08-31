@@ -4,15 +4,15 @@
 #ifndef inlib_rroot_streamers
 #define inlib_rroot_streamers
 
+#include "dummy_fac"
+
 #include "named"
 #include "date"
 #include "directory"
-#include "graph"
+//#include "graph"
 #include "clss"
-#include "info"
 #include "dummy"
-#include "list"
-#include "iros"
+#include "obj_list"
 
 #include "../sout"
 #include "../vmanip"
@@ -70,61 +70,6 @@ inline bool AttAxis_stream(buffer& a_buffer){
     return true;
 }
 
-class dummy_fac : public virtual ifac {
-public: //ifac
-  virtual iro* create(const std::string& a_class,const args& a_args) {
-    if(rcmp(a_class,"TGraph")) { //for TH_read_1D/List.
-      return new graph();
-
-    // for read_sinfos() :
-    } else if(rcmp(a_class,"TStreamerInfo")) {
-      return new StreamerInfo(*this);
-    } else if(rcmp(a_class,"TObjArray")) {
-      std::string* sc = ifac::arg_class(a_args);
-      if(sc) {
-        if((*sc)==streamer_element::s_class()){
-          return new obj_array<streamer_element>(*this,true,true);
-        } else {
-          m_out << "inlib::rroot::dummy_fac::create :"
-                << " Can't create TObjArray of " << *sc << "."
-                << std::endl;
-          return 0;
-        }
-      } else {
-        return new iros(*this,true,true);
-      }
-
-    } else if(rcmp(a_class,"TStreamerBase")
-            ||rcmp(a_class,"TStreamerBasicType")
-            ||rcmp(a_class,"TStreamerBasicPointer")
-            ||rcmp(a_class,"TStreamerObjectAny")
-            ||rcmp(a_class,"TStreamerObject")
-            ||rcmp(a_class,"TStreamerObjectPointer")
-            ||rcmp(a_class,"TStreamerString")
-            ||rcmp(a_class,"TStreamerSTL")
-            ||rcmp(a_class,"TStreamerLoop")
-            ||rcmp(a_class,"TList")
-             ) {
-      return new dummy_streamer_element();
-
-    } else {
-      m_out << "inlib::rroot::dummy_fac::create :"
-            << " dummy. Can't create object of class " << sout(a_class) << "."
-            << std::endl;
-    }
-    return 0;
-  }
-  virtual void destroy(iro*& a_obj) {delete a_obj;a_obj = 0;}
-public:
-  dummy_fac(std::ostream& a_out):m_out(a_out){}
-  virtual ~dummy_fac(){}
-protected:
-  dummy_fac(const dummy_fac& a_from): ifac(a_from),m_out(a_from.m_out){}
-  dummy_fac& operator=(const dummy_fac&){return *this;}
-protected:
-  std::ostream& m_out;
-};
-
 inline bool Axis_stream(buffer& a_buffer,histo::axis<double,unsigned int>& a_fAxis){
     // Version 6 streaming (ROOT/v3-00-6).
     short v;
@@ -143,8 +88,6 @@ inline bool Axis_stream(buffer& a_buffer,histo::axis<double,unsigned int>& a_fAx
     if(!a_buffer.read(min)) return false;
     double max;
     if(!a_buffer.read(max)) return false;
-    //::printf("debug : BatchLab::RioTH::streamTAxis : %d %g %g\n",
-    //  number,min,max);
 
     std::vector<double> edges;
     if(!Array_stream<double>(a_buffer,edges)) return false; //fXbins TArrayD
@@ -204,7 +147,7 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
     short vers;
     if(!a_buffer.read_version(vers,s,c)) return false;
 
-    //::printf("debug : BatchLab::Rio::TH::streamTH1 : version %d\n",vers);
+    //::printf("debug : inlib::rroot::TH_read_1D : version %d\n",vers);
 
     // Version 3 streaming (ROOT/v3-00-6).
 
@@ -233,7 +176,7 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
 
       if(!Axis_stream(a_buffer,a_data.m_axes[2])) return false; //fZAxis
       a_data.m_axes[2].m_offset = a_data.m_axes[1].m_offset * (a_data.m_axes[1].bins()+2);
-      
+
     } else if(a_data.m_dimension==2) {
       if(!Axis_stream(a_buffer,a_data.m_axes[1])) return false; //fYAxis
       a_data.m_axes[1].m_offset = a_data.m_axes[0].m_offset * (a_data.m_axes[0].bins()+2);
@@ -255,8 +198,6 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
     if(!a_buffer.read(a_entries)) return false;
 
     if(!a_buffer.read(a_Sw)) return false; //fTsumw
-    //::printf("debug : BatchLab::Rio::TH::streamTH1 : \"%s\" %g %g\n",
-    //         a_data.m_title.c_str(),fEntries,fSw);
 
     if(!a_buffer.read(a_Sw2)) return false;
 
@@ -278,7 +219,7 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
 
     std::vector<double> sumw2; //fSumw2 TArrayD
     if(!Array_stream<double>(a_buffer,sumw2)) return false;
-    
+
    {std::string opt;
     if(!a_buffer.read(opt)) return false; //TString fOption
     //look if it is an "annotation trick" :
@@ -288,7 +229,7 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
     }
 
    {dummy_fac fac(a_buffer.out());
-    obj_list dummy(fac,true,true);
+    obj_list dummy(fac);
     if(!dummy.stream(a_buffer)) {
       a_buffer.out() << "inlib::rroot::TH_read_1D :"
                      << " obj_list stream failed."
@@ -299,7 +240,7 @@ inline bool TH_read_1D(buffer& a_buffer,hd_data& a_data,
     if(vers>=4) {
       int BufferSize;
       if(!a_buffer.read(BufferSize)) return false;
-      
+
       //Double_t* Buffer; //[fBufferSize]
       if(!dummy_array_stream<double>(a_buffer,BufferSize)) return false;
     }
@@ -347,8 +288,6 @@ inline bool TH_read_2D(buffer& a_buffer,hd_data& a_data,
     short v;
     if(!a_buffer.read_version(v,s,c)) return false;
 
-    //::printf("debug : BatchLab::Rio::TH::streamTH2 : version %d\n",v);
- 
     // Version 3 streaming (ROOT/v3-00-6).
 
     if(!TH_read_1D(a_buffer,a_data,a_entries,a_Sw,a_Sw2,a_Sxw,a_Sx2w)) return false;
@@ -365,10 +304,10 @@ inline bool TH_read_2D(buffer& a_buffer,hd_data& a_data,
 
     double Tsumwxy;
     if(!a_buffer.read(Tsumwxy)) return false;
-    a_data.m_in_range_plane_Sxyw[0] = Tsumwxy;  
+    a_data.m_in_range_plane_Sxyw[0] = Tsumwxy;
 
     if(!a_buffer.check_byte_count(s,c,"TH2")) return false;
-  
+
     return true;
 }
 
@@ -402,9 +341,9 @@ inline bool TH_read_3D(buffer& a_buffer,hd_data& a_data,
     double Tsumwyz;
     if(!a_buffer.read(Tsumwyz)) return false;
 
-    a_data.m_in_range_plane_Sxyw[0] = Tsumwxy;  
-    a_data.m_in_range_plane_Sxyw[1] = Tsumwyz;  
-    a_data.m_in_range_plane_Sxyw[2] = Tsumwxz;  
+    a_data.m_in_range_plane_Sxyw[0] = Tsumwxy;
+    a_data.m_in_range_plane_Sxyw[1] = Tsumwyz;
+    a_data.m_in_range_plane_Sxyw[2] = Tsumwxz;
 
     if(!a_buffer.check_byte_count(s,c,"TH3")) return false;
 
@@ -415,8 +354,6 @@ inline histo::h1d* TH1F_stream(buffer& a_buffer){
     unsigned int s, c;
     short v;
     if(!a_buffer.read_version(v,s,c)) return 0;
-
-    //::printf("debug : BatchLab::Rio::TH1F::stream : version %d\n",v);
 
     // Version 1 streaming (ROOT/v3-00-6).
 
@@ -445,7 +382,6 @@ inline histo::h1d* TH1F_stream(buffer& a_buffer){
     if(!a_buffer.check_byte_count(s,c,"TH1F")) return 0;
 
     unsigned int binn = data.m_bin_number;
-    //::printf("debug : BatchLab::Rio::TH1F::stream : histo bins %d\n",binn);
     data.m_bin_Sw.resize(binn,0);
    {for(unsigned int index=0;index<binn;index++){
       data.m_bin_Sw[index] = double(bins[index]);
@@ -474,8 +410,6 @@ inline histo::h1d* TH1D_stream(buffer& a_buffer){
     unsigned int s, c;
     short v;
     if(!a_buffer.read_version(v,s,c)) return 0;
-
-    //::printf("debug : BatchLab::Rio::TH1D::stream : version %d\n",v);
 
     // Version 1 streaming (ROOT/v3-00-6).
 
@@ -529,8 +463,6 @@ inline histo::h2d* TH2F_stream(buffer& a_buffer){
     short v;
     if(!a_buffer.read_version(v,s,c)) return 0;
 
-    //::printf("debug : BatchLab::Rio::TH2F::stream : version %d\n",v);
-
     // Version 3 streaming (ROOT/v3-00-6).
 
     // Now we have to reconstruct a valid Histogram from a_buffer :
@@ -561,7 +493,6 @@ inline histo::h2d* TH2F_stream(buffer& a_buffer){
     if(!a_buffer.check_byte_count(s,c,"TH2F")) return 0;
 
     unsigned int binn = data.m_bin_number;
-    //::printf("debug : BatchLab::Rio::TH2F::stream : histo bins %d\n",binn);
     data.m_bin_Sw.resize(binn,0);
    {for(unsigned int index=0;index<binn;index++){
       data.m_bin_Sw[index] = double(bins[index]);
@@ -583,7 +514,7 @@ inline histo::h2d* TH2F_stream(buffer& a_buffer){
     data.m_in_range_Sx2w[0] = fSx2w;
     data.m_in_range_Sxw[1] = fSyw;
     data.m_in_range_Sx2w[1] = fSy2w;
-    
+
     histo::h2d* h = new histo::h2d("",10,0,1,10,0,1);
     h->copy_from_data(data);
     return h;
@@ -593,8 +524,6 @@ inline histo::h2d* TH2D_stream(buffer& a_buffer){
     unsigned int s, c;
     short v;
     if(!a_buffer.read_version(v,s,c)) return 0;
-
-    //::printf("debug : BatchLab::Rio::TH2D::stream : version %d\n",v);
 
     // Version 3 streaming (ROOT/v3-00-6).
 
@@ -644,7 +573,7 @@ inline histo::h2d* TH2D_stream(buffer& a_buffer){
     data.m_in_range_Sx2w[0] = fSx2w;
     data.m_in_range_Sxw[1] = fSyw;
     data.m_in_range_Sx2w[1] = fSy2w;
-    
+
     histo::h2d* h = new histo::h2d("",10,0,1,10,0,1);
     h->copy_from_data(data);
     return h;
@@ -654,8 +583,6 @@ inline histo::h3d* TH3D_stream(buffer& a_buffer){
     unsigned int s, c;
     short v;
     if(!a_buffer.read_version(v,s,c)) return 0;
-
-    //::printf("debug : BatchLab::Rio::TH2D::stream : version %d\n",v);
 
     // Now we have to reconstruct a valid Histogram from a_buffer :
     hd_data data;
@@ -848,94 +775,33 @@ inline histo::p2d* TProfile2D_stream(buffer& a_buffer){
     return p;
 }
 
-class TDirectory : public rroot::directory {
-//public:
-//  static const std::string& store_class() {return TDirectory_cls();}
-public:
-  TDirectory(ifile& a_file):rroot::directory(a_file){}
-  virtual ~TDirectory(){}
-protected:
-  TDirectory(const TDirectory& a_from):rroot::directory(a_from){}
-  TDirectory& operator=(const TDirectory&){return *this;}
-public:
-  bool stream(buffer& a_buffer){
-    initialize();
-    short version;
-    if(!a_buffer.read_version(version)) return false;
-    unsigned int _date;
-    if(!a_buffer.read(_date)) return false;
-    //m_date_C.setDate(_date);
-    if(!a_buffer.read(_date)) return false;
-    //m_date_M.setDate(_date);
-    if(!a_buffer.read(m_nbytes_keys)) return false;
-    if(!a_buffer.read(m_nbytes_name)) return false;
-    if((uint32)version>big_file_version_tag()) {
-      if(!a_buffer.read(m_seek_directory)) return false;
-      if(!a_buffer.read(m_seek_parent)) return false;
-      if(!a_buffer.read(m_seek_keys)) return false;
-    } else {
-     {seek32 i;
-      if(!a_buffer.read(i)) return false;
-      m_seek_directory = i;}
+}}
 
-     {seek32 i;
-      if(!a_buffer.read(i)) return false;
-      m_seek_parent = i;}
+#include "TDirectory"
 
-     {seek32 i;
-      if(!a_buffer.read(i)) return false;
-      m_seek_keys = i;}
-    }
-    //short v = version%big_file_version_tag();
-
-    if (m_seek_keys) {
-      uint32 n;
-      if(!read_keys(n)) {
-        a_buffer.out() << "inlib::rroot::TDirectory::stream :"
-                       << " cannot read keys."
-                       << std::endl;
-        return false;
-      }
-    }
-
-    return true;
-  }
-protected:
-  void initialize(){
-    // Initialise directory to defaults :
-    // If directory is created via default ctor (when dir is read from file)
-    // don't add it here to the directory since its name is not yet known.
-    // It will be added to the directory in TKey::ReadObj().
-    m_date_C = 0;//m_date_C.set();
-    m_date_M = 0;//m_date_M.set();
-    m_nbytes_keys = 0;
-    m_seek_directory = 0;
-    m_seek_parent = 0;
-    m_seek_keys = 0;
-  }
-};
-
+namespace inlib {
+namespace rroot {
 
 inline void dump(std::ostream& a_out,
-                 rroot::ifile& a_file,
-                 const std::vector<rroot::key*>& a_keys,
+                 ifile& a_file,
+                 const std::vector<key*>& a_keys,
                  bool a_recursive,
                  unsigned int a_spaces = 0) {
 
   // dump non directory objects :
- {std::vector<rroot::key*>::const_iterator it;
+ {std::vector<key*>::const_iterator it;
   for(it=a_keys.begin();it!=a_keys.end();++it) {
-    rroot::key& k = *(*it);
-    if(k.object_class()==rroot::TDirectory_cls()) continue;
+    key& k = *(*it);
+    if(k.object_class()==TDirectory_cls()) continue;
    {for(unsigned int index=0;index<a_spaces;index++) a_out << " ";}
     k.dump(a_out);
   }}
 
   // dump directories :
- {std::vector<rroot::key*>::const_iterator it;
+ {std::vector<key*>::const_iterator it;
   for(it=a_keys.begin();it!=a_keys.end();++it) {
-    rroot::key& k = *(*it);
-    if(k.object_class()!=rroot::TDirectory_cls()) continue;
+    key& k = *(*it);
+    if(k.object_class()!=TDirectory_cls()) continue;
 
     std::string label = k.object_name();
    {for(unsigned int index=0;index<a_spaces;index++) a_out << " ";}
@@ -951,25 +817,25 @@ inline void dump(std::ostream& a_out,
              << " can't get directory data buffer."
              << std::endl;
     } else {
-      rroot::buffer b(a_out,a_file.byte_swap(),
-                             sz,buf,k.key_length(),false);
-      rroot::TDirectory tdir(a_file);
+      buffer b(a_out,a_file.byte_swap(),sz,buf,k.key_length(),false);
+      TDirectory tdir(a_file);
       if(!tdir.stream(b)) {
         a_out  << "inlib::rroot::dump :"
               << " can't stream TDirectory."
               << std::endl;
       } else {
-        const std::vector<rroot::key*>& keys = tdir.keys();
+        const std::vector<key*>& keys = tdir.keys();
         dump(a_out,a_file,keys,a_recursive,a_spaces+1);
       }
     }
   }}
 }
 
-inline bool read_sinfos(rroot::ifile& a_file){
+/*
+inline bool read_sinfos(ifile& a_file){
   key& k = a_file.sinfos_key();
   std::ostream& out = k.out();
-  if(k.object_class()!=rroot::TList_cls()) {
+  if(k.object_class()!=TList_cls()) {
     out << "inlib::rroot::read_sinfos :"
         << " key not a TList."
         << std::endl;
@@ -983,18 +849,18 @@ inline bool read_sinfos(rroot::ifile& a_file){
         << std::endl;
     return false;
   }
-  rroot::buffer b(out,a_file.byte_swap(),sz,buf,k.key_length(),false);
+  buffer b(out,a_file.byte_swap(),sz,buf,k.key_length(),false);
   dummy_fac fac(out);
-  obj_list infos(fac,true,true);
+  obj_list infos(fac);
   if(!infos.stream(b)) return false;
   inlib_vforcit(iro*,infos,it) {
-    StreamerInfo* info = safe_cast<iro,StreamerInfo>(*(*it));
+    streamer_info* info = safe_cast<iro,streamer_info>(*(*it));
     if(!info) return false;
     info->out(out);
   }
   return true;
 }
-
+*/
 
 }}
 

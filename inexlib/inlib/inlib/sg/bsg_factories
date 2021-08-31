@@ -50,7 +50,7 @@ public:
   template <class T>
   static node* create_composite(fac_args&,bool& a_composite) {
     a_composite = true;
-    return new T;    
+    return new T;
   }
 
 public:

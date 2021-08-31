@@ -4,7 +4,7 @@
 #ifndef inlib_get_cout
 #define inlib_get_cout
 
-// used for lua swig wrapping of std::cout.
+// used for lua SWIG wrapping of std::cout.
 
 #include <iostream>
 

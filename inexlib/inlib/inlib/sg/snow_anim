@@ -161,10 +161,10 @@ protected:
 
     // D = b2-4ac
     float D = v0.y()*v0.y()-2*acc.y()*(y_start-y0); //it should be >0
-      
+
     float tmx = (-v0.y()-::sqrtf(D))/acc.y();
     //::printf("debug : %g\n",tmx);
-      
+
     for(unsigned int index=0;index<number_of_flakes.value();index++) {
 
       separator* _sep = new separator;
@@ -187,7 +187,7 @@ protected:
       m->add_end_callback(_cbk);
       _sep->add(m);
 
-      cube* _node = new cube();   
+      cube* _node = new cube();
       _node->width = flake_size;
       _node->height = flake_size;
       _node->depth = flake_size;
@@ -206,7 +206,7 @@ protected:
       //::printf("debug : snow cbk\n");
       if(m_action==action_create()) {
         m_this.create_snow(m_time);
-        return return_to_render;     
+        return return_to_render;
 
       } else if(m_action==action_stop()) {
         //WARNING : delete anim must be done in the main loop.
@@ -215,9 +215,9 @@ protected:
           delete m_to_del;
           m_to_del = 0;
         }
-        //return return_to_render;     
+        //return return_to_render;
       }
-      return return_none;     
+      return return_none;
     }
   public:
     snow_cbk(snow_anim& a_this,
@@ -225,7 +225,7 @@ protected:
              unsigned int a_action)
     :parent(a_action)
     ,m_this(a_this)
-    ,m_rand(a_rand)    
+    ,m_rand(a_rand)
     ,m_to_del(0)
     ,m_time(0,0)
     {}
@@ -234,7 +234,7 @@ protected:
     snow_cbk(const snow_cbk& a_from)
     :parent(a_from)
     ,m_this(a_from.m_this)
-    ,m_rand(a_from.m_rand)    
+    ,m_rand(a_from.m_rand)
     ,m_to_del(a_from.m_to_del)
     ,m_time(a_from.m_time)
     {}
@@ -257,6 +257,6 @@ protected:
   random::flat m_rand;
 };
 
-}}  
+}}
 
 #endif

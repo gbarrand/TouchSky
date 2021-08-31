@@ -55,18 +55,22 @@ public:
   virtual const desc_fields& node_desc_fields() const {
     INLIB_FIELD_DESC_NODE_CLASS(inlib::sg::healpix)
     static const desc_fields s_v(parent::node_desc_fields(),14, //WARNING : take care of count.
-      INLIB_ARG_FIELD_DESC(columns),
-      INLIB_ARG_FIELD_DESC(rows),
+      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(healpixs),
+      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(ordering),
 
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(auto_lut,3)
         INLIB_ARG_ENUM(auto_lut_none),
         INLIB_ARG_ENUM(auto_lut_min_max),
         INLIB_ARG_ENUM(auto_lut_mean_rms)
       INLIB_ARG_FIELD_DESC_ENUMS_END,
-	
+
       INLIB_ARG_FIELD_DESC(lut),
       INLIB_ARG_FIELD_DESC(colors),
       INLIB_ARG_FIELD_DESC(hmax),
+      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(infos),
+
+      INLIB_ARG_FIELD_DESC(columns),
+      INLIB_ARG_FIELD_DESC(rows),
 
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(bin_modeling,4)
         "bin_flat_point",bin_flat_point,
@@ -76,36 +80,30 @@ public:
       INLIB_ARG_FIELD_DESC_ENUMS_END,
 
       INLIB_ARG_FIELD_DESC(dynamic),
-      
+
       INLIB_ARG_FIELD_DESC_ENUMS_BEG(support,4)
         "support_moll_image",support_moll_image,
         "support_moll_heal",support_moll_heal,
         "support_moll_rect",support_moll_rect,
         "support_sphere",support_sphere
       INLIB_ARG_FIELD_DESC_ENUMS_END,
-      
-      INLIB_ARG_FIELD_DESC(cut),
-      INLIB_ARG_FIELD_DESC(order),
 
-      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(healpixs),
-      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(ordering),
-      INLIB_ARG_FIELD_DESC_NOT_EDITABLE(infos)
+      INLIB_ARG_FIELD_DESC(cut),
+      INLIB_ARG_FIELD_DESC(order)
     );
     return s_v;
   }
 private:
   void add_fields(){
-    add_field(&columns);
-    add_field(&rows);
-
+    add_field(&healpixs);
+    add_field(&ordering);
     add_field(&auto_lut);
     add_field(&lut);
     add_field(&colors);
-    add_field(&healpixs);
     add_field(&hmax);
-    add_field(&ordering);
     add_field(&infos);
-
+    add_field(&columns);
+    add_field(&rows);
     add_field(&bin_modeling);
     add_field(&dynamic);
     add_field(&support);
@@ -114,7 +112,7 @@ private:
   }
 public:
   healpix()
-  :parent() 
+  :parent()
 
   ,auto_lut(auto_lut_none)
   ,lut()
@@ -141,7 +139,7 @@ public:
   virtual ~healpix(){}
 public:
   healpix(const healpix& a_from)
-  :parent(a_from) 
+  :parent(a_from)
 
   ,auto_lut(a_from.auto_lut)
   ,lut(a_from.lut)
@@ -196,7 +194,7 @@ public:
       m_tris.render(a_action);
       m_segs.render(a_action);
       a_action.set_polygon_offset(a_action.state().m_GL_POLYGON_OFFSET_FILL);
-    }     
+    }
   }
   virtual void pick(pick_action& a_action) {
     look_update_sg(a_action.out(),a_action.state());
@@ -206,7 +204,7 @@ public:
       nodekit_pick(a_action,m_pts,this);
       nodekit_pick(a_action,m_segs,this);
       nodekit_pick(a_action,m_tris,this);
-    }     
+    }
   }
   virtual void bbox(bbox_action& a_action) {
     look_update_sg(a_action.out(),a_action.state());
@@ -224,7 +222,7 @@ public:
       m_pts.bbox(a_action);
       m_segs.bbox(a_action);
       m_tris.bbox(a_action);
-    }     
+    }
   }
 public:
   template <class HISTO>
@@ -263,7 +261,7 @@ protected:
       return false;
     }
     a_col = a_colors[vlut];
-    return true;  
+    return true;
   }
 
   static bool color_func(std::ostream& a_out,
@@ -391,7 +389,7 @@ protected:
           a_mtx.mul_dir_3d(_pt0.x(),_pt0.y(),_pt0.z());
           if(float(_pt0.z())<zcut) continue;
           number++;
-        }   
+        }
         bin_allocate(bin_modeling.value(),a_draw_edges,number,m_pts,m_segs,m_tris);
       } else {
         bin_allocate(bin_modeling.value(),a_draw_edges,npix,m_pts,m_segs,m_tris);
@@ -415,7 +413,7 @@ protected:
         const vec3d& _pt1 = pts[1];
         const vec3d& _pt2 = pts[2];
         const vec3d& _pt3 = pts[3];
-  
+
         if(to_cut) {
           _pt0_.set_value(float(_pt0.x()),float(_pt0.y()),float(_pt0.z()));
           a_mtx.mul_dir_3f(_pt0_.x(),_pt0_.y(),_pt0_.z());
@@ -479,7 +477,7 @@ protected:
         parent::update_sg(a_out);
         return;
       }
-  
+
       const colorf& _back = back_color.value();
       unsigned char back_red = _back.ruchar();
       unsigned char back_green = _back.guchar();
@@ -557,7 +555,7 @@ protected:
       } else {
         bin_allocate(bin_modeling.value(),a_draw_edges,npix,m_pts,m_segs,m_tris);
       }
-  
+
       vec3f e0,e1,e2,e3;
       vec3f _nm,tmp1,tmp2,tmp3;
       float value,h,x,y,z,zside1,zside2;
@@ -636,7 +634,7 @@ protected:
             b0,b1,b2,b3,e0,e1,e2,e3,
             m_pts,m_segs,m_tris,
             _nm,tmp1,tmp2); //tmps
-      } 
+      }
 
     } else { //support.value()==support_moll_rect :
 
@@ -673,7 +671,7 @@ protected:
           _theta = (yd+0.5)*pi();
           facteur = two_pi()/::sin(::acos(2*yd));
           for(ix=0;ix<_cols;ix++) {
-            xa = (double(ix)+0.5)/double(_cols)-0.5;  
+            xa = (double(ix)+0.5)/double(_cols)-0.5;
             _phi = xa*facteur+pi();
             if ( (0<=_phi) && (_phi<=two_pi()) ) {
               x = xbeg+ix*sx;
@@ -703,7 +701,7 @@ protected:
         _theta = (yd+0.5)*pi();
         facteur = two_pi()/::sin(::acos(2*yd));
         for(ix=0;ix<_cols;ix++) {
-          xa = (double(ix)+0.5)/double(_cols)-0.5;  
+          xa = (double(ix)+0.5)/double(_cols)-0.5;
           _phi = xa*facteur+pi();
           if ( (0<=_phi) && (_phi<=two_pi()) ) {
             if(!color_func(a_out,data_nside,hpixs,is_ring,_lut,colors.values(),_theta,_phi,_col,value)) {
@@ -749,7 +747,7 @@ protected:
                 _nm,tmp1,tmp2); //tmps
 
           }
-        } 
+        }
       }
 
     }
@@ -777,7 +775,7 @@ protected:
       x = a_width*(_phi/two_pi()-0.5); //a_width*[-0.5,0.5]
       y = a_height*(0.5-_theta/pi());  //a_height*[-0.5,0.5]
       x *= ::sin(::acos(y*2));
-      z = 0;    
+      z = 0;
     }
     a_out.set_value(float(x),float(y),float(z));
     return true;

@@ -25,11 +25,11 @@
 #include "../sto"
 
 // astro related :
-#include "../fradecs"
-#include "../SDSS"
-#include "../radecs"
+#include "../astro/fradecs"
+#include "../astro/SDSS"
+#include "../astro/radecs"
 #include "../picmap"
-#include "../astro" //s_get_from_home()
+#include "../astro/sastro" //s_get_from_home()
 
 #include "../cbk/win_render"
 
@@ -253,8 +253,8 @@ protected:
             m_vfradecs.clear();
             return false;
           }
-        }      
-        m_vfradecs.push_back(fradecs(wrds[0],vals));        
+        }
+        m_vfradecs.push_back(fradecs(wrds[0],vals));
       }}
     }
     return true;
@@ -294,7 +294,7 @@ protected:
       path +="/"+(*it).sid();
 
       separator* sep = new separator;
-    
+
      {images* _params = new images(*this,count);
       _params->auto_lut = m_params.auto_lut;
       _params->lut = m_params.lut;
@@ -337,7 +337,7 @@ protected:
     m_images.add(all_sep);
   }
 
-  void update_sg(matrix_action& a_action) {        
+  void update_sg(matrix_action& a_action) {
     if(name.value().empty()) return;
     unsigned int _scale;
     power<unsigned int,unsigned int>(2,modeling_scale_factor.value(),_scale);
@@ -401,7 +401,6 @@ protected:
         INLIB_ARG_FIELD_DESC_ENUMS_END,
         INLIB_ARG_FIELD_DESC(lut),
         INLIB_ARG_FIELD_DESC(colors)
-        //INLIB_ADD_FIELD_DESC(zoom)
       );
       return s_v;
     }
@@ -433,12 +432,12 @@ protected:
                 m_grid.m_params.auto_lut = auto_lut_none;
               }
             }
-          } 
+          }
           m_grid.m_ui.add_work(new cbk::win_render(m_grid.m_ui));
         }
       }
       parent::render(a_action);
-    }  
+    }
   public:
     images(image_grid& a_grid,int a_count)
     :parent()

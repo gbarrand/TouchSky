@@ -5,10 +5,10 @@
 #define inlib_HEALPix
 
 //from HEALPix/2.15a.
-// Copyright (C) 1997-2010 Krzysztof M. Gorski, Eric Hivon, 
-//                         Benjamin D. Wandelt, Anthony J. Banday, 
-//                         Matthias Bartelmann, 
-//                         Reza Ansari & Kenneth M. Ganga 
+// Copyright (C) 1997-2010 Krzysztof M. Gorski, Eric Hivon,
+//                         Benjamin D. Wandelt, Anthony J. Banday,
+//                         Matthias Bartelmann,
+//                         Reza Ansari & Kenneth M. Ganga
 
 #include <cmath>
 #include <ostream>
@@ -19,21 +19,21 @@ namespace inlib {
 namespace HEALPix {
 
 inline int fmodi(int a_x,int a_y) {
-  return (int)::fmod((double)a_x,(double)a_y); 
+  return (int)::fmod((double)a_x,(double)a_y);
 }
 
 inline void mk_xy2pix(int x2pix[128],int y2pix[128]) {
    // sets the array giving the number of the pixel lying in (x,y)
    // x and y are in {1,128}
    // the pixel number is in {0,128**2-1}
-   //   
+   //
    // if  i-1 = sum_p=0  b_p * 2^p
    // then ix = sum_p=0  b_p * 4^p
    // iy = 2*ix
    // ix + iy in {0, 128**2 -1}
 
   int i, K,IP,I,J,ID;
-  
+
   for(i = 0; i < 127; i++) x2pix[i] = 0;
   for( I=1;I<=128;I++ ) {
     J  = I-1;//            !pixel numbers
@@ -49,9 +49,9 @@ inline void mk_xy2pix(int x2pix[128],int y2pix[128]) {
       J  = J/2;
       K  = IP*ID+K;
       IP = IP*4;
-    }    
-  }     
-  
+    }
+  }
+
 }
 
 inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta,double a_phi,int& a_ipix) {
@@ -62,7 +62,7 @@ inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta
   // and then degraded to that required (by integer division)
   // this doesn't cost more, and it makes sure that the treatement of
   // round-off will be consistent for every resolution
-  
+
   unsigned int ns_max = 8192;
 
   if( (a_nside==0) || (a_nside>ns_max) ) {
@@ -84,12 +84,12 @@ inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta
     mk_xy2pix(x2pix,y2pix);
     setup_done = true;
   }
-  
+
   if( a_phi>=two_pi() ) a_phi = a_phi - two_pi();
   else if( a_phi<0. )   a_phi = a_phi + two_pi();
 
   double tt = a_phi / half_pi(); // in [0,4[
-  
+
   double z  = ::cos(a_theta);
   double za = ::fabs(z);
   double z0 = 2./3.;
@@ -99,40 +99,40 @@ inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta
   int    ix, iy, ipf, ntt;
 
   if( za<=z0 ) { // equatorial region
-    
+
     // (the index of edge lines increase when the longitude=phi goes up)
     jp = (int)::floor(ns_max*(0.5 + tt - z*0.75));// ascending edge line index
     jm = (int)::floor(ns_max*(0.5 + tt + z*0.75));// descending edge line index
-    
+
     // finds the face
     ifp = jp / ns_max; // in {0,4}
     ifm = jm / ns_max;
-    
+
     if( ifp==ifm ) face_num = fmodi(ifp,4) + 4; // faces 4 to 7
     else if( ifp<ifm ) face_num = fmodi(ifp,4); // (half-)faces 0 to 3
     else face_num = fmodi(ifm,4) + 8;           // (half-)faces 8 to 11
-    
+
     ix = fmodi(jm, ns_max);
     iy = ns_max - fmodi(jp, ns_max) - 1;
 
   } else { // polar region, za > 2/3
-    
+
     ntt = (int)::floor(tt);
     if( ntt>=4 ) ntt = 3;
     double tp = tt - ntt;
     double tmp = ::sqrt( 3.*(1. - za) ); // in ]0,1]
-    
+
     // (the index of edge lines increase when distance from the closest pole
     // goes up)
     // line going toward the pole as phi increases
 
-    jp = (int)::floor( ns_max * tp          * tmp ); 
+    jp = (int)::floor( ns_max * tp          * tmp );
 
     // that one goes away of the closest pole
     jm = (int)::floor( ns_max * (1. - tp) * tmp );
     jp = (int)(jp < int(ns_max)-1 ? jp : int(ns_max)-1);
     jm = (int)(jm < int(ns_max)-1 ? jm : int(ns_max)-1);
-    
+
     // finds the face and pixel's (x,y)
     if( z>=0 ) {
       face_num = ntt; // in {0,3}
@@ -145,7 +145,7 @@ inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta
       iy =  jm;
     }
   }
-  
+
   int ix_low = fmodi(ix,128);
   int ix_hi  =     ix/128;
   int iy_low = fmodi(iy,128);
@@ -166,9 +166,9 @@ inline bool ang2pix_nest(std::ostream& a_out,unsigned int a_nside,double a_theta
 }
 
 inline bool ang2pix_ring(std::ostream& a_out,unsigned int a_nside,double a_theta,double a_phi,int& a_ipix) {
-  // gives the pixel number ipix (RING) 
+  // gives the pixel number ipix (RING)
   // corresponding to angles theta and phi
-  
+
   unsigned int ns_max=8192;
 
   if( (a_nside==0) || (a_nside>ns_max) ) {
@@ -183,7 +183,7 @@ inline bool ang2pix_ring(std::ostream& a_out,unsigned int a_nside,double a_theta
           << std::endl;
     return false;
   }
-  
+
   if( a_phi>=two_pi() ) a_phi = a_phi - two_pi();
   else if( a_phi<0. )   a_phi = a_phi + two_pi();
 
@@ -191,54 +191,54 @@ inline bool ang2pix_ring(std::ostream& a_out,unsigned int a_nside,double a_theta
   double za = ::fabs(z);
 
   double tt = a_phi / half_pi();//  ! in [0,4)
-  
+
   double z0=2.0/3.0;
-  
+
   int nl2 = 2*a_nside;
   int nl4 = 4*a_nside;
   int ncap  = nl2*(a_nside-1);// ! number of pixels in the north polar cap
   int npix  = 12*a_nside*a_nside;
-  
+
   int jp, jm, ipix1;
   int ir, ip, kshift;
-  
+
   if( za <= z0 ) {
-    
+
     jp = (int)::floor(a_nside*(0.5+tt-z*0.75)); //index of ascending edge line
     jm = (int)::floor(a_nside*(0.5+tt+z*0.75)); //index of descending edge line
-    
+
     ir = a_nside + 1 + jp - jm; //in {1,2n+1} (ring number counted from z=2/3)
     kshift = 0;
     if (fmodi(ir,2)==0) kshift = 1;// ! kshift=1 if ir even, 0 otherwise
-    
+
     ip = (int)::floor( double(jp+jm-a_nside+kshift+1)/2) + 1; //in {1,4n}
     if( ip>nl4 ) ip = ip - nl4;
-    
+
     ipix1 = ncap + nl4*(ir-1) + ip ;
 
   } else {
-    
+
     double tp = tt - ::floor(tt); //!MOD(tt,1.d0)
     double tmp = ::sqrt( 3.*(1. - za) );
-    
+
     jp = (int)::floor( a_nside * tp * tmp ); //increasing edge line index
     jm = (int)::floor( a_nside * (1. - tp) * tmp );//decreasing edge line index
-    
+
     ir = jp + jm + 1; //ring number counted from the closest pole
     ip = (int)::floor( tt * ir ) + 1;// ! in {1,4*ir}
     if( ip>4*ir ) ip = ip - 4*ir;
-    
+
     ipix1 = 2*ir*(ir-1) + ip;
     if( z<=0. ) {
       ipix1 = npix - 2*ir*(ir+1) + ip;
     }
   }
   a_ipix = ipix1 - 1;// ! in {0, npix-1}
-  
+
   return true;
 }
 
-template <typename INT> 
+template <typename INT>
 inline unsigned int ilog2(INT a_arg) {
   unsigned int res=0;
   while (a_arg > 0x0000FFFF) { res+=16; a_arg>>=16; }
@@ -427,7 +427,7 @@ inline void xyf2loc(double a_x,double a_y,int a_face,double& a_z,double& a_phi,d
 
 }}
 
-#include "vec3d"
+#include "lina/vec3d"
 
 namespace inlib {
 namespace HEALPix { //warning : with this casing to avoid a clash with sg::healpix.

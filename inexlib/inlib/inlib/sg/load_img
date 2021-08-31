@@ -25,22 +25,22 @@ inline void load_img(sg::gui_viewer& a_gv,img_byte& a_img,const colorf& a_back) 
 
   if(!_evd->is_evd()) {
     _evd->create_sg_evd();
-    _evd->replace_camera(a_gv.create_2D_camera(2));    
+    _evd->replace_camera(a_gv.create_2D_camera(2));
   }
   a_gv.set_plane_viewer(true);
 
-  sg::separator& dsep = _evd->detector_sg();
+  sg::separator& dsep = _evd->static_sg();
 
   sg::separator* sep = new sg::separator;
   dsep.add(sep);
-  
+
   sg::matrix* tsf = new sg::matrix();
   sep->add(tsf);
 
   sg::rgba* mat = new sg::rgba();
   mat->color = colorf_white();
   sep->add(mat);
-  
+
   sep->add(new sg::normal);
   sep->add(new sg::event_dispatcher()); //for image_manip.
 
@@ -60,10 +60,10 @@ inline void load_img(sg::gui_viewer& a_gv,img_byte& a_img,const colorf& a_back) 
 */
 
   sep->add(img);
-  
+
   //_evd->adapt_img(adapt_camera,*tsf,*img,a_args);
 
-}  
+}
 
 }
 

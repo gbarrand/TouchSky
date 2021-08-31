@@ -4,17 +4,18 @@
 #ifndef inlib_rroot_shape2ph
 #define inlib_rroot_shape2ph
 
+#include "mul_mtx"
+
 #include "../hep/polyhedron"
 #include "../mathd"
-#include "../vec3f"
-#include "../vec4f"
-#include "../rotf"
+#include "../lina/vec3f"
+#include "../lina/vec4f"
+#include "../lina/rotf"
 
 #include "geo_shapes"
 #include "geo_scaled_shape"
 #include "geo_xtru"
 #include "geo_bool_node"
-#include "geo_matrices"
 
 #include "../sg/primitive_visitor"
 
@@ -29,58 +30,7 @@ inline void set_rotate_to(mat4f& a_matrix,const vec3f& a_to){
   r.value(amtx);
   a_matrix = amtx;
 }
-  
-inline bool mul_mtx(std::ostream& a_out,const rroot::geo_matrix& a_gmtx,mat4f& a_matrix) {
-  
-    if(cast_matrix<rroot::geo_identity>(a_gmtx)) {
-  
-    } else if(const rroot::geo_rotation* grot = cast_matrix<rroot::geo_rotation>(a_gmtx)) {
-  
-      const double* vec = grot->matrix();
-      a_matrix.mul_mtx_rot_root(
-                       float(vec[0]),float(vec[1]),float(vec[2]),
-                       float(vec[3]),float(vec[4]),float(vec[5]),
-  	               float(vec[6]),float(vec[7]),float(vec[8]));
-  
-    } else if(const rroot::geo_translation* gtrans = cast_matrix<rroot::geo_translation>(a_gmtx)) {
-  
-      const double* tr = gtrans->trans();
-      a_matrix.mul_translate(float(tr[0]),float(tr[1]),float(tr[2]));
-  
-    } else if(const rroot::geo_scale* gscale = cast_matrix<rroot::geo_scale>(a_gmtx)) {
-  
-      const double* sc = gscale->scale();
-      a_matrix.mul_scale(float(sc[0]),float(sc[1]),float(sc[2]));
-  
-    } else if(const rroot::geo_combi_trans* gctrans = cast_matrix<rroot::geo_combi_trans>(a_gmtx)) {
-      //rotated then placed.
-  
-      const double* tr = gctrans->trans();
-      a_matrix.mul_translate(float(tr[0]),float(tr[1]),float(tr[2]));
-  
-      if(gctrans->rot()) {
-        const double* vec = gctrans->rot()->matrix();
-        a_matrix.mul_mtx_rot_root(
-                       float(vec[0]),float(vec[1]),float(vec[2]),
-                       float(vec[3]),float(vec[4]),float(vec[5]),
-  	               float(vec[6]),float(vec[7]),float(vec[8]));
-      }
-  
-    } else if(//const rroot::geo_hmatrix* ghmatrix =
-                cast_matrix<rroot::geo_hmatrix>(a_gmtx)) {
-      a_out << "inlib::rroot::mul_mtx :"
-                << " geo_hmatrix not handled here."
-                << std::endl;
-      return false;
-    } else {
-      a_out << "inlib::rroot::mul_mtx :"
-                << " unknown matrix class " << a_gmtx.s_cls()
-                << std::endl;
-      return false;
-    }
-    return true;
-}
-  
+
 class add_ph : public sg::primitive_visitor {
 public:
   virtual bool project(float&,float&,float&,float&) {return true;}
@@ -113,9 +63,9 @@ public:
     yv = a_p2y-a_p1y;
     xw = a_p3x-a_p2x;
     yw = a_p3y-a_p2y;
-    cross_z = xv*yw-yv*xw;    
+    cross_z = xv*yw-yv*xw;
     bool acw = cross_z>0?true:false;
-  
+
 /*
     ::printf("debug : add_triangle :\n");
     ::printf("debug : 0 : %g %g %g\n",a_p1x,a_p1y,a_p1z);
@@ -127,16 +77,16 @@ public:
     double* xs = new double[m_nz*3];
     double* ys = new double[m_nz*3];
    {int i,j;
-    for(j=0;j<3;j++) {        
+    for(j=0;j<3;j++) {
       for(i=0;i<m_nz;i++) {
         xs[i*3+j] = m_scales[i]*pxs[j]+m_x0s[i];
         ys[i*3+j] = m_scales[i]*pys[j]+m_y0s[i];
       }
     }}
-  
+
     m_phs.push_back(hep::polyhedron());
     hep::polyhedron& rph = m_phs.back();
-  
+
     //hep::polyhedron rph;
     if(!rph.set_polyhedron_xtru(3,m_nz,xs,ys,m_zs,acw,false)) {
       m_out << "inlib::rroot::add_ph::add_triangle :"
@@ -146,7 +96,7 @@ public:
       delete [] ys;
       return false;
     }
-  
+
   /*
     hep::BooleanProcessor processor; //G.Barrand
     int err;
@@ -167,7 +117,7 @@ public:
     }
     a_ph = res;
 */
-  
+
     delete [] xs;
     delete [] ys;
 
@@ -175,16 +125,62 @@ public:
   }
 
   virtual bool add_triangle(float a_p1x,float a_p1y,float a_p1z,float a_p1w,
-                              float,float,float,float,
+                            float,float,float,float,
                             float a_p2x,float a_p2y,float a_p2z,float a_p2w,
-                              float,float,float,float,
+                            float,float,float,float,
                             float a_p3x,float a_p3y,float a_p3z,float a_p3w,
-                              float,float,float,float){
+                            float,float,float,float){
     return add_ph::add_triangle(a_p1x,a_p1y,a_p1z,a_p1w,
                                 a_p2x,a_p2y,a_p2z,a_p2w,
                                 a_p3x,a_p3y,a_p3z,a_p3w);
   }
 
+  virtual bool project_normal(float& a_x,float& a_y,float& a_z) {return true;}
+  virtual bool add_point_normal(float a_x,float a_y,float a_z,float a_w,
+                                float a_nx,float a_ny,float a_nz) {return false;}
+  virtual bool add_point_normal(float a_x,float a_y,float a_z,float a_w,
+                                float a_nx,float a_ny,float a_nz,
+                                float a_r,float a_g,float a_b,float a_a) {return false;}
+  virtual bool add_line_normal(float a_bx,float a_by,float a_bz,float a_bw,
+                               float a_bnx,float a_bny,float a_bnz,
+                               float a_ex,float a_ey,float a_ez,float a_ew,
+                               float a_enx,float a_eny,float a_enz) {return false;}
+  virtual bool add_line_normal(float a_bx,float a_by,float a_bz,float a_bw,
+                               float a_bnx,float a_bny,float a_bnz,
+                               float a_br,float a_bg,float a_bb,float a_ba,
+                               float a_ex,float a_ey,float a_ez,float a_ew,
+                               float a_enx,float a_eny,float a_enz,
+                               float a_er,float a_eg,float a_eb,float a_ea){return false;}
+  virtual bool add_triangle_normal(
+      float a_p1x,float a_p1y,float a_p1z,float a_p1w,
+      float a_n1x,float a_n1y,float a_n1z,
+      float a_p2x,float a_p2y,float a_p2z,float a_p2w,
+      float a_n2x,float a_n2y,float a_n2z,
+      float a_p3x,float a_p3y,float a_p3z,float a_p3w,
+      float a_n3x,float a_n3y,float a_n3z) {
+      add_ph::add_triangle(a_p1x,a_p1y,a_p1z,a_p1w,
+                           a_p2x,a_p2y,a_p2z,a_p2w,
+                           a_p3x,a_p3y,a_p3z,a_p3w);
+      return true;
+    }
+    virtual bool add_triangle_normal(
+      float a_p1x,float a_p1y,float a_p1z,float a_p1w,
+      float a_n1x,float a_n1y,float a_n1z,
+      float a_r1,float a_g1,float a_b1,float a_a1,
+      float a_p2x,float a_p2y,float a_p2z,float a_p2w,
+      float a_n2x,float a_n2y,float a_n2z,
+      float a_r2,float a_g2,float a_b2,float a_a2,
+      float a_p3x,float a_p3y,float a_p3z,float a_p3w,
+      float a_n3x,float a_n3y,float a_n3z,
+      float a_r3,float a_g3,float a_b3,float a_a3){
+      add_ph::add_triangle(a_p1x,a_p1y,a_p1z,a_p1w,
+                           a_r1,a_g1,a_b1,a_a1,
+                           a_p2x,a_p2y,a_p2z,a_p2w,
+                           a_r2,a_g2,a_b2,a_a2,
+                           a_p3x,a_p3y,a_p3z,a_p3w,
+                           a_r3,a_g3,a_b3,a_a3);
+      return true;
+    }
 public:
   add_ph(std::ostream& a_out,
          hep::polyhedron& a_ph,
@@ -244,33 +240,33 @@ protected:
 };
 
 inline bool shape_set_polyhedron(std::ostream& a_out,
-                                 const rroot::geo_shape& a_shape,
+                                 const geo_shape& a_shape,
                                  hep::polyhedron& a_ph,
-                                 std::vector<hep::polyhedron>& a_phs, 
+                                 std::vector<hep::polyhedron>& a_phs,
                                  sg::tessellate* a_tess){
-  
+
     a_phs.clear();
     int nstep = 24;
 
-     // not yet treated 
-    if(cast_shape<rroot::geo_half_space>(a_shape)){
-  
+     // not yet treated
+    if(cast_shape<geo_half_space>(a_shape)){
+
       a_out << " no polyhedron for shape " << a_shape.s_cls() << std::endl;
       return false;
-  
-    } else if(const rroot::geo_ctub* ctub = cast_shape<rroot::geo_ctub>(a_shape)){
+
+    } else if(const geo_ctub* ctub = cast_shape<geo_ctub>(a_shape)){
       //must be before tube_seg.
 
       hep::polyhedron_tubs tubs(ctub->rmin(),ctub->rmax(),ctub->dz(),ctub->phi1()*deg2rad(),
-                              (ctub->phi2() - ctub->phi1())*deg2rad(),
-                              nstep);
+                                (ctub->phi2() - ctub->phi1())*deg2rad(),
+                                nstep);
 
       double sz = ::sqrt(ctub->rmax()*ctub->rmax()+ctub->dz()*ctub->dz());
       sz *= 20;
 
       hep::polyhedron_box cut_low(sz,sz,sz);
      {cut_low.Translate(0,0,-sz); //then in xy plane.
-      const double* norm = ctub->low(); 
+      const double* norm = ctub->low();
       mat4f mtx;
       set_rotate_to(mtx,vec3f(float(norm[0]),float(norm[1]),float(norm[2])));
       hep::tsf_polyhedron(cut_low,mtx);
@@ -278,7 +274,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
 
       hep::polyhedron_box cut_high(sz,sz,sz);
      {cut_high.Translate(0,0,-sz); //then in xy plane.
-      const double* norm = ctub->high(); 
+      const double* norm = ctub->high();
       mat4f mtx;
       set_rotate_to(mtx,vec3f(float(norm[0]),float(norm[1]),float(norm[2])));
       hep::tsf_polyhedron(cut_high,mtx);
@@ -286,54 +282,54 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
 
       hep::polyhedron cut_min_z = tubs.intersect(cut_low);
       a_ph = cut_min_z.intersect(cut_high);
-    
-    } else if(const rroot::geo_tube_seg* tubs = cast_shape<rroot::geo_tube_seg>(a_shape)){
+
+    } else if(const geo_tube_seg* tubs = cast_shape<geo_tube_seg>(a_shape)){
       //must be before tube.
-  
+
       return a_ph.set_polyhedron_tubs(tubs->rmin(),tubs->rmax(),tubs->dz(),
-                              tubs->phi1()*deg2rad(),
-                              (tubs->phi2() - tubs->phi1())*deg2rad(),
-                              nstep);
-  
-    } else if(const rroot::geo_hype* hype = cast_shape<rroot::geo_hype>(a_shape)){
+                                      tubs->phi1()*deg2rad(),
+                                      (tubs->phi2() - tubs->phi1())*deg2rad(),
+                                      nstep);
+
+    } else if(const geo_hype* hype = cast_shape<geo_hype>(a_shape)){
       //must be before tube.
-  
+
       return a_ph.set_polyhedron_hype(hype->st_in()*deg2rad(),
                               hype->st_out()*deg2rad(),
                               hype->rmin(),hype->rmax(),hype->dz(),
                               10,nstep);
-  
-    } else if(const rroot::geo_eltu* eltu = cast_shape<rroot::geo_eltu>(a_shape)){
+
+    } else if(const geo_eltu* eltu = cast_shape<geo_eltu>(a_shape)){
       //must be before tube.
-  
+
       return a_ph.set_polyhedron_eltu(eltu->a(),eltu->b(),eltu->dz(),
                                      10,nstep);
-  
-    } else if(const rroot::geo_tube* tube = cast_shape<rroot::geo_tube>(a_shape)){
-  
+
+    } else if(const geo_tube* tube = cast_shape<geo_tube>(a_shape)){
+
       return a_ph.set_polyhedron_tube(tube->rmin(),tube->rmax(),tube->dz());
-  
-    } else if(const rroot::geo_cone_seg* cons = cast_shape<rroot::geo_cone_seg>(a_shape)){
+
+    } else if(const geo_cone_seg* cons = cast_shape<geo_cone_seg>(a_shape)){
       //must be before cone.
-  
+
       return a_ph.set_polyhedron_cons(cons->rmin1(),cons->rmax1(),
                               cons->rmin2(),cons->rmax2(),
                               cons->dz(),
                               cons->phi1()*deg2rad(),
                               (cons->phi2() - cons->phi1())*deg2rad(),
                               nstep);
-  
-    } else if(const rroot::geo_torus* torus = cast_shape<rroot::geo_torus>(a_shape)){
-  
+
+    } else if(const geo_torus* torus = cast_shape<geo_torus>(a_shape)){
+
       return a_ph.set_polyhedron_torus(torus->rmin(),torus->rmax(),
                                torus->r(),
                                torus->phi()*deg2rad(),
                                torus->dphi()*deg2rad(),
                                nstep,nstep);
-  
-    } else if(const rroot::geo_xtru* xtru = cast_shape<rroot::geo_xtru>(a_shape)){
-  
-      
+
+    } else if(const geo_xtru* xtru = cast_shape<geo_xtru>(a_shape)){
+
+
       //if(!xtru->poly()) {
         //a_out << " xtru has no geo_polygon." << std::endl;
         //return false;
@@ -369,14 +365,14 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
         //  yv  yw
         //   0   0
         cross_z = xv*yw-yv*xw;
-        if(cross_z>0) {convex = false;break;}   
+        if(cross_z>0) {convex = false;break;}
         xv = xw;
         yv = yw;
       }
       if(convex) { // check seg(n-2,n-1) to seg(n-1,0)
         xw = pxs[0]-pxs[npts-1];
         yw = pys[0]-pys[npts-1];
-        cross_z = xv*yw-yv*xw;    
+        cross_z = xv*yw-yv*xw;
         if(cross_z>0) convex = false;
         xv = xw;
         yv = yw;
@@ -384,7 +380,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
       if(convex) { // check seg(n-1,0) to seg(0,1)
         xw = pxs[1]-pxs[0];
         yw = pys[1]-pys[0];
-        cross_z = xv*yw-yv*xw;    
+        cross_z = xv*yw-yv*xw;
         if(cross_z>0) convex = false;
       }
 
@@ -407,7 +403,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
           *pos = pxs[j];pos++;
           *pos = pys[j];pos++;
           *pos =      0;pos++;
-        }}    
+        }}
 
         sg::tessellate::prims_t prims;
         a_tess->do_it(npts,solid_doubles,prims);
@@ -427,7 +423,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
               a_out << "inlib::rroot::shape_set_polyhedron :"
                     << " xtru : add_triangle_strip failed."
                     << std::endl;
-              xtru->dump(a_out);
+              xtru->dump_4_rshape(a_out);
               raw_clear(prims);
               return false;
             }
@@ -436,7 +432,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
               a_out << "inlib::rroot::shape_set_polyhedron :"
                     << " xtru : add_triangle_fan failed."
                     << std::endl;
-              xtru->dump(a_out);
+              xtru->dump_4_rshape(a_out);
               raw_clear(prims);
               return false;
             }
@@ -445,7 +441,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
               a_out << "inlib::rroot::shape_set_polyhedron :"
                     << " xtru : add_triangles failed."
                     << std::endl;
-              xtru->dump(a_out);
+              xtru->dump_4_rshape(a_out);
               raw_clear(prims);
               return false;
             }
@@ -471,7 +467,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
       //NOTE : hep::polyhedron_xtru wants xs,ysanticlockwise
       //       and z(+ to -) ordering.
      {int i,j,jj;
-      for(j=0;j<npts;j++) {        
+      for(j=0;j<npts;j++) {
         jj = inds?inds[j]:j;
         //::printf("debug :  -> %d : %d : %g %g\n",j,inds[j],pxs[jj],pys[jj]);
         for(i=0;i<nz;i++) {
@@ -489,26 +485,26 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
               << std::endl;
         return false;
       }
-  
-    } else if(const rroot::geo_cone* cone = cast_shape<rroot::geo_cone>(a_shape)){
-  
+
+    } else if(const geo_cone* cone = cast_shape<geo_cone>(a_shape)){
+
       return a_ph.set_polyhedron_cone(cone->rmin1(),cone->rmax1(),
                               cone->rmin2(),cone->rmax2(),
                               cone->dz(),nstep);
-  
-    } else if(const rroot::geo_trd1* trd1 = cast_shape<rroot::geo_trd1>(a_shape)){
-  
+
+    } else if(const geo_trd1* trd1 = cast_shape<geo_trd1>(a_shape)){
+
       return a_ph.set_polyhedron_trd1(trd1->dx1(),trd1->dx2(),
                                      trd1->dy(),trd1->dz());
-  
-    } else if(const rroot::geo_trd2* trd2 = cast_shape<rroot::geo_trd2>(a_shape)){
-  
+
+    } else if(const geo_trd2* trd2 = cast_shape<geo_trd2>(a_shape)){
+
       return a_ph.set_polyhedron_trd2(trd2->dx1(),trd2->dx2(),
                                      trd2->dy1(),trd2->dy2(),
                                      trd2->dz());
-  
-    } else if(const rroot::geo_sphere* sphere = cast_shape<rroot::geo_sphere>(a_shape)){
-  
+
+    } else if(const geo_sphere* sphere = cast_shape<geo_sphere>(a_shape)){
+
       return a_ph.set_polyhedron_sphere(sphere->rmin(),sphere->rmax(),
                          sphere->phi1()*deg2rad(),
                          (sphere->phi2()-sphere->phi1())*deg2rad(),
@@ -516,21 +512,21 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
                          (sphere->theta2()-sphere->theta1())*deg2rad(),
                          sphere->nseg(),
                          sphere->nz());
-  
-    } else if(const rroot::geo_para* para = cast_shape<rroot::geo_para>(a_shape)){
-  
+
+    } else if(const geo_para* para = cast_shape<geo_para>(a_shape)){
+
       return a_ph.set_polyhedron_para(para->dx(),para->dy(),para->dz(),
                               para->alpha()*deg2rad(),
                               para->theta()*deg2rad(),
                               para->phi()*deg2rad());
-  
-    } else if(const rroot::geo_gtra* gtra = cast_shape<rroot::geo_gtra>(a_shape)){
+
+    } else if(const geo_gtra* gtra = cast_shape<geo_gtra>(a_shape)){
       //must be before trap.
 
       return a_ph.set_polyhedron_arb8(gtra->dz(),gtra->xy());
-  
-    } else if(const rroot::geo_trap* trap = cast_shape<rroot::geo_trap>(a_shape)){
-  
+
+    } else if(const geo_trap* trap = cast_shape<geo_trap>(a_shape)){
+
       //in principle we could have used a_ph.set_polyhedron_arb8() too.
 
       return a_ph.set_polyhedron_trap(trap->dz(),
@@ -540,30 +536,30 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
                               trap->alpha1()*deg2rad(),
                               trap->h2(),trap->bl2(),trap->tl2(),
                               trap->alpha2()*deg2rad());
-  
-    } else if(const rroot::geo_pcon* pcon = cast_shape<rroot::geo_pcon>(a_shape)){
-  
+
+    } else if(const geo_pcon* pcon = cast_shape<geo_pcon>(a_shape)){
+
       return a_ph.set_polyhedron_pcon(pcon->phi1()*deg2rad(),
                               pcon->dphi()*deg2rad(),
                               pcon->nz(),
                               pcon->z(),pcon->rmin(),pcon->rmax());
-  
-    } else if(const rroot::geo_arb8* arb8 = cast_shape<rroot::geo_arb8>(a_shape)){
-  
+
+    } else if(const geo_arb8* arb8 = cast_shape<geo_arb8>(a_shape)){
+
       return a_ph.set_polyhedron_arb8(arb8->dz(),arb8->xy());
-  
-    } else if(const rroot::geo_composite_shape* cshape = cast_shape<rroot::geo_composite_shape>(a_shape)){
-  
+
+    } else if(const geo_composite_shape* cshape = cast_shape<geo_composite_shape>(a_shape)){
+
       //a_out << "debug : composite_shape" << std::endl;
 
-      const rroot::geo_bool_node* bnode = cshape->node();
+      const geo_bool_node* bnode = cshape->node();
       if(!bnode) return false;
-      const rroot::geo_shape* ln = bnode->left();
-      const rroot::geo_shape* rn = bnode->right();
-      const rroot::geo_matrix* lm = bnode->left_matrix();
-      const rroot::geo_matrix* rm = bnode->right_matrix();
+      const geo_shape* ln = bnode->left();
+      const geo_shape* rn = bnode->right();
+      const geo_matrix* lm = bnode->left_matrix();
+      const geo_matrix* rm = bnode->right_matrix();
       if(!ln||!rn||!lm||!rm) return false;
-  
+
       bool verbose = false;
       //bool verbose = true;
       if(verbose)
@@ -592,7 +588,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
       mtx.set_identity();
       mul_mtx(a_out,*lm,mtx);
       if(lphs.empty()) {
-        hep::tsf_polyhedron(lph,mtx);  
+        hep::tsf_polyhedron(lph,mtx);
         lphs.push_back(lph);
       } else {
         //a_out << "inlib::rroot::shape_set_polyhedron :"
@@ -601,7 +597,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
         //      << std::endl;
         std::vector<hep::polyhedron>::iterator it;
         for(it=lphs.begin();it!=lphs.end();++it) {
-          hep::tsf_polyhedron(*it,mtx);  
+          hep::tsf_polyhedron(*it,mtx);
         }
       }}
 
@@ -623,7 +619,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
       mtx.set_identity();
       mul_mtx(a_out,*rm,mtx);
       if(rphs.empty()) {
-        hep::tsf_polyhedron(rph,mtx); 
+        hep::tsf_polyhedron(rph,mtx);
         rphs.push_back(rph);
       } else {
         //a_out << "inlib::rroot::shape_set_polyhedron :"
@@ -632,13 +628,13 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
         //      << std::endl;
         std::vector<hep::polyhedron>::iterator it;
         for(it=rphs.begin();it!=rphs.end();++it) {
-          hep::tsf_polyhedron(*it,mtx);  
+          hep::tsf_polyhedron(*it,mtx);
         }
       }}
 
       int OPERATION = -1;
 
-      if(cast_bool_node<rroot::geo_union>(*bnode)){
+      if(cast_bool_node<geo_union>(*bnode)){
 
         if((lphs.size()!=1)||(rphs.size()!=1)) {
 
@@ -656,11 +652,11 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
 
         } else {
           OPERATION = hep::OP_UNION;
-        }         
+        }
 
-      } else if(cast_bool_node<rroot::geo_intersection>(*bnode)){
+      } else if(cast_bool_node<geo_intersection>(*bnode)){
         OPERATION = hep::OP_INTERSECTION;
-      } else if(cast_bool_node<rroot::geo_subtraction>(*bnode)){
+      } else if(cast_bool_node<geo_subtraction>(*bnode)){
         OPERATION = hep::OP_SUBTRACTION;
       } else {
         a_out << " unknown bool_node " << bnode->s_cls() << std::endl;
@@ -717,10 +713,10 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
             << " ok."
             << std::endl;
 
-    
-    } else if(const rroot::geo_scaled_shape* sshape = cast_shape<rroot::geo_scaled_shape>(a_shape)){
-  
-      const rroot::geo_shape* gshape = sshape->shape();
+
+    } else if(const geo_scaled_shape* sshape = cast_shape<geo_scaled_shape>(a_shape)){
+
+      const geo_shape* gshape = sshape->shape();
 
       hep::polyhedron ph;
       std::vector<hep::polyhedron> phs;
@@ -732,7 +728,7 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
         return false;
       }
 
-      const rroot::geo_scale* gscale = sshape->scale();
+      const geo_scale* gscale = sshape->scale();
       const double* scale = gscale->scale();
 
       mat4f mtx;
@@ -746,22 +742,21 @@ inline bool shape_set_polyhedron(std::ostream& a_out,
           hep::tsf_polyhedron(*it,mtx);
         }
       }
-  
-    } else if(cast_shape<rroot::geo_pgon>(a_shape)){
+
+    } else if(cast_shape<geo_pgon>(a_shape)){
       a_out << " no polyhedron for shape " << a_shape.s_cls() << std::endl;
       return false;
-  
+
     //bbox must be the last since inherited by most shapes.
-    } else if(const rroot::geo_bbox* box = cast_shape<rroot::geo_bbox>(a_shape)){
-  
-      const double* vec = box->origin();
+    } else if(const geo_bbox* box = cast_shape<geo_bbox>(a_shape)){
+
+      //const double* vec = box->origin();
       //a_out << " orig "
       //          << vec[0] << " " << vec[1] << " " << vec[2] << std::endl;
-  
-      if(!a_ph.set_polyhedron_box(box->d_x(),box->d_y(),box->d_z()))
-        return false;
-      a_ph.Translate(vec[0],vec[1],vec[2]);
-  
+
+      if(!a_ph.set_polyhedron_box(box->d_x(),box->d_y(),box->d_z())) return false;
+      a_ph.Translate(box->origin_x(),box->origin_y(),box->origin_z());
+
     } else {
       a_out << " no polyhedron for shape " << a_shape.s_cls() << std::endl;
       return false;

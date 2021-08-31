@@ -6,7 +6,7 @@
 
 #include "../net/wget"
 #include "../xml/srvs"
-#include "../SDSS"
+#include "../astro/SDSS"
 
 namespace inlib {
 namespace sg {
@@ -27,7 +27,7 @@ public:
   virtual ~view_astro(){}
 protected:
   view_astro(const view_astro& a_from)
-  :m_catalog(a_from.m_catalog)  
+  :m_catalog(a_from.m_catalog)
   ,m_wget(a_from.m_wget.out())
   ,m_srvs_ref(a_from.m_srvs_ref)
   ,m_host(a_from.m_host)

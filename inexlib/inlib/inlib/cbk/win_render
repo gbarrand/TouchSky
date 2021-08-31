@@ -16,7 +16,7 @@ class win_render : public sg::bcbk {
 public:
   virtual sg::return_action action() {
     m_ui.win_render();
-    return sg::return_to_render;     
+    return sg::return_to_render;
   }
   virtual sg::bcbk* copy() const {return new win_render(*this);}
 public:

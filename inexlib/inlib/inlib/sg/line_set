@@ -10,6 +10,7 @@
 #include "../stype"
 #include "render_action"
 #include "pick_action"
+#include "bbox_action"
 
 namespace inlib {
 namespace sg {
@@ -40,19 +41,37 @@ public:
   }
 
   virtual void pick(pick_action& a_action) {
-    inlib_vforcit(line_t,lines.values(),it) {
-      a_action.add_line_strip(*it,true);
-      if(a_action.done()) {
-        a_action.set_node(this);
-        return;
+    if(a_action.stop_at_first()){
+      inlib_vforcit(line_t,lines.values(),it) {
+        a_action.add_line_strip(*it);
+        if(a_action.done()) {
+          a_action.set_node(this);
+          return;
+        }
+      }
+    } else {
+      inlib_vforcit(line_t,lines.values(),it) {
+        a_action.set_done(false);
+        a_action.zs().clear();
+        a_action.ws().clear();
+        a_action.add_line_strip(*it);
+        if(a_action.done()) {
+          a_action.add_pick(*this,a_action.zs(),a_action.ws(),a_action.state());
+          a_action.set_done(false);
+        }
       }
     }
+  }
 
+  virtual void bbox(bbox_action& a_action) {
+    inlib_vforcit(line_t,lines.values(),it) {
+      a_action.add_points(*it);
+    }
   }
 
 public:
   line_set()
-  :parent() 
+  :parent()
   ,lines()
   {
 #ifdef INLIB_MEM
@@ -81,7 +100,7 @@ public:
     return *this;
   }
 public:
-  bool add(const line_t& a_line) { 
+  bool add(const line_t& a_line) {
     size_t npoint = a_line.size()/3;
     if(npoint*3!=a_line.size()) return false;
     lines.add(a_line);
