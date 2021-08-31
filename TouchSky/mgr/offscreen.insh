@@ -1,0 +1,51 @@
+#!insh
+
+scene_create -radius=2
+plots_create
+
+gui_hide_main_menu
+gui_hide_console
+plots_hide
+
+# healpix:
+scene_clear_static
+exa_healpix
+scene_write_to_paper -format=inzb_ps out_healpix.ps
+scene_write_to_paper -format=inzb_png out_healpix.png
+
+# M51:
+scene_clear_static
+scene_add_fits -flat=false m51.fits
+scene_write_to_paper -format=inzb_ps out.ps
+scene_write_to_paper -format=inzb_png out.png
+
+# dc2 root:
+scene_create -radius=2
+scene_clear_static
+scene_set_clear_color black
+exa_dc2_pos_z_root
+camera_view_all
+scene_write_to_paper -format=inzb_ps out_dc2_root.ps
+scene_write_to_paper -format=inzb_png out_dc2_root.png
+
+# dc2 csv:
+scene_create -radius=2
+scene_set_clear_color white
+camera_zoom 0.7
+scene_clear_static
+exa_dc2_rdz_csv_gz
+scene_write_to_paper -format=inzb_ps out_dc2_csv.ps
+scene_write_to_paper -format=inzb_png out_dc2_csv.png
+
+# NCC-1701:
+scene_create -radius=2
+scene_set_clear_color black
+scene_light_on
+scene_read_bsg -file=star_trek_enterprise.bsg
+camera_view_all
+scene_write_to_paper -format=inzb_ps out_ncc_1701.ps
+scene_write_to_paper -format=inzb_png out_ncc_1701.png
+
+# SOPHYA histo:
+exa_sophya_histo.insh
+
