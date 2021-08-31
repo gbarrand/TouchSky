@@ -1,0 +1,74 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_stsci
+#define inlib_stsci
+
+#include "../num2s"
+#include "sastro"
+
+namespace inlib {
+namespace stsci {
+
+inline void stsci_surveys(std::vector<std::string>& a_v,std::string& a_def) {
+  a_v.clear();
+  a_v.push_back("poss2ukstu_red");
+  a_v.push_back("poss2ukstu_ir");
+  a_v.push_back("poss2ukstu_blue");
+  a_v.push_back("poss1_blue");
+  a_v.push_back("poss1_red");
+  a_v.push_back("all");
+  a_v.push_back("quickv");
+  a_v.push_back("phase2_gsc2");
+  a_v.push_back("phase2_gsc1");
+  a_def = "all";
+}
+
+inline void build_request(std::ostream& a_out,double a_ra,double a_dec,double a_w,double a_h,std::string& a_request) {
+  // a_ra, a_dec in dec deg.
+  a_request.clear();
+
+  // a_ra, a_dec in dec deg.
+  // a_w, a_h in dec deg. Typically 0.25 degree = 15 arcmin.
+
+//if(a_w>1.0) a_w = 1.0; //same logic as ds9
+//if(a_h>1.0) a_h = 1.0;
+
+  a_request = "/cgi-bin/dss_search?";
+
+  a_request += "r=";
+  inlib::numas(a_ra,a_request);
+  a_request += "d&";
+
+  a_request += "d=";
+  inlib::numas(a_dec,a_request);
+  a_request += "d&";
+
+ {std::string epoch;
+  epoch = inlib::s_epoch_J2000();
+  a_request += "e="+epoch+"&";}
+
+  a_request += "w=";
+  if(!inlib::numas<double>(a_w*60.0,a_request)){} //stsci wants arcmin
+  a_request += "&";
+
+  a_request += "h=";
+  if(!inlib::numas<double>(a_h*60.0,a_request)){}    //stsci wants arcmin
+  a_request += "&";   //stsci wants arcmin
+
+  a_request += "f=fits&";
+  a_request += "c=none&";
+
+ {std::vector<std::string> v;
+  std::string def;
+  stsci_surveys(v,def);
+  std::string survey = def;
+  a_request += "v="+survey+"&";}
+  
+//a_request += "fov=NONE&";
+//a_request += "v3=";
+}
+
+}}
+
+#endif
