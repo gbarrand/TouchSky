@@ -1,0 +1,349 @@
+#!/bin/sh -f
+
+#sophya_src=../../ourex_zips/SrcSophyaV2_300
+sophya_src=/usr/local/SOPHYA/head_git
+
+#///////////////////////////////////////////
+#/// get .c, .cc files : ///////////////////
+#///////////////////////////////////////////
+
+find ./src -name '*.c' -exec /bin/rm -f {} \;
+find ./src -name '*.cc' -exec /bin/rm -f {} \;
+
+# for exlib/examples/cpp/sophya :
+cp ${sophya_src}/SophyaLib/BaseTools/datatype.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/dvlist.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/fiondblock.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/gnumd5.c ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/mutyv.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ndatablock.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/pexceptions.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppersist.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppfbinstream.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppftpointerio.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/rawstream.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/stsrand.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/randr48.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/timestamp.cc ./src/BaseTools/.
+
+cp ${sophya_src}/SophyaLib/SUtils/strutil.c ./src/SUtils/.
+cp ${sophya_src}/SophyaLib/HiStats/basedtable.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/datatable.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/ntupintf.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/ntuple.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/swppfdtable.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsbntbllineRW.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsfile.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitshdtable.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsinoutfile.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsntuple.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/swfitsdtable.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaLib/TArray/basarr.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tarray.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tmatrix.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tvector.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/utilarr.cc ./src/TArray/.
+
+cp ${sophya_src}/SophyaLib/SysTools/progbar.cc ./src/SysTools/.
+
+# for exlib/examples/cpp/sophya :
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsmanager.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitshistos.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaLib/HiStats/hisprof.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/histos2.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/histos.cc ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/TArray/fioarr.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/sopemtx.cc ./src/TArray/.
+cp ${sophya_src}/SophyaLib/NTools/poly.cc ./src/NTools/.
+cp ${sophya_src}/SophyaLib/NTools/classfunc.cc ./src/NTools/.
+
+# V2_3 :
+cp ${sophya_src}/SophyaLib/BaseTools/sunitpcst.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/pqnumber.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/randinterf.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/HiStats/dtcellrowcont.cc ./src/HiStats/.
+
+#cp ${sophya_src}/SophyaLib/BaseTools/sophyainit.cc ./src/BaseTools/.
+#cp ${sophya_src}/SophyaLib/BaseTools/srandgen.c ./src/BaseTools/.
+#cp ${sophya_src}/SophyaLib/SUtils/datacards.cc ./src/SUtils/.
+#cp ${sophya_src}/SophyaLib/SUtils/strutilxx.cc ./src/SUtils/.
+#cp ${sophya_src}/SophyaLib/SUtils/utils.cc ./src/SUtils/.
+
+#cp ${sophya_src}/SophyaLib/HiStats/fio_dtable.cc ./src/HiStats/.
+#cp ${sophya_src}/SophyaLib/HiStats/hist2err.cc ./src/HiStats/.
+#cp ${sophya_src}/SophyaLib/HiStats/histerr.cc ./src/HiStats/.
+#cp ${sophya_src}/SophyaLib/HiStats/proxtuple.cc ./src/HiStats/.
+#cp ${sophya_src}/SophyaLib/HiStats/xntuple.cc ./src/HiStats/.
+
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/datacirclefits.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fabtcolread.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fabtwriter.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fboloread.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fbtntintf.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fiosinit.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsautoreader.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsgenedata.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitshisterr.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitslocalmap.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsspherehealpix.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsspherethetaphi.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitstarray.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsxntuple.cc ./src/FitsIOServer/.
+#cp ${sophya_src}/SophyaLib/TArray/matharr.cc ./src/TArray/.
+#cp ${sophya_src}/SophyaLib/TArray/tarrinit.cc ./src/TArray/.
+
+#cp ${sophya_src}/SophyaLib/NTools/cimage.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/cspline.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/datatypes.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/dates.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/datime.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/difeq.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/dynccd.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fct1dfit.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fct2dfit.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftmayer_r4.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftmayer_r8.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftmserver.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftpackc.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftpserver.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/fftservintf.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/FSAppIrrSmpl.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/functab.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/generaldata.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/generalfit.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/generalfunc.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/integ.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/matxop.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/median.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/nbmath.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/nbtri.c ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/ntoolsinit.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/objfitter.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/perandom.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/rk4cdifeq.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/simplesort.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/simplex.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/tabmath.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/toeplitzMatrix.cc ./src/NTools/.
+
+#cp ${sophya_src}/SophyaLib/Samba/circle.cc ./src/Samba/.
+
+#///////////////////////////////////////////
+#/// get .h : //////////////////////////////
+#///////////////////////////////////////////
+find ./src -name '*.h' -exec /bin/rm -f {} \;
+find ./include -name '*.h' -exec /bin/rm -f {} \;
+
+cp ${sophya_src}/SophyaLib/SysTools/progbar.h ./include/.
+cp ${sophya_src}/SophyaLib/SUtils/ppfpio_flgvec.h ./include/.
+
+# for exlib/examples/cpp/sophya :
+cp ${sophya_src}/SophyaLib/BaseTools/gnumd5.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/SUtils/strutil.h ./src/SUtils/.
+cp ${sophya_src}/SophyaLib/SUtils/flagvector.h ./src/SUtils/.
+cp ${sophya_src}/SophyaLib/BaseTools/datatype.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/dvlist.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/fiondblock.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/mutyv.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ndatablock.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/pexceptions.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppersist.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppfbinstream.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppftpointerio.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/rawstream.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/stsrand.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/timestamp.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsbntbllineRW.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsfile.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitshdtable.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsinoutfile.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsntuple.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsmanager.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/swfitsdtable.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaLib/HiStats/basedtable.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/datatable.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/ntupintf.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/ntuple.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/swppfdtable.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/TArray/basarr.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tarray.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tmatrix.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/tvector.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/utilarr.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/NTools/poly.h ./src/NTools/.
+
+cp ${sophya_src}/SophyaLib/NTools/classfunc.h ./src/NTools/.
+
+# extra headers :
+cp ${sophya_src}/SophyaLib/BaseTools/bithelp.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/sopnamsp.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/objfio.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/anydataobj.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppfnametag.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/segdatablock.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tmatrix_tsnl.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tvector_tsnl.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/fiosegdb.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/thsafeop.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/perrors.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/swsegdb.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppfswapper.h ./include/.
+cp ${sophya_src}/SophyaLib/SUtils/utils.h ./include/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitshandler.h ./include/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsswapper.h ./include/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsblkrw.h ./include/.
+
+# for exlib/examples/cpp/sophya_2 :
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsmanager.h ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaLib/HiStats/histos.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/histos2.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/HiStats/hisprof.h ./src/HiStats/.
+cp ${sophya_src}/SophyaLib/TArray/fioarr.h ./src/TArray/.
+cp ${sophya_src}/SophyaLib/TArray/sopemtx.h ./src/TArray/.
+
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsarrhand.h ./include/.
+cp ${sophya_src}/SophyaLib/NTools/fmath.h ./include/.
+cp ${sophya_src}/SophyaLib/NTools/linfit.h ./include/.
+cp ${sophya_src}/SophyaLib/NTools/peida.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/smathconst.h ./include/.
+
+find ./src -name '*.h' -exec /bin/cp {} ./include/. \;
+
+# V2_3 :
+cp ${sophya_src}/SophyaLib/BaseTools/sunitpcst.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/pqnumber.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/randinterf.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/swppfsegdb.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/randr48.h ./include/.
+cp ${sophya_src}/SophyaLib/HiStats/dtcellrowcont.h ./include/.
+cp ${sophya_src}/SophyaLib/SUtils/fmlstr.h ./include/.
+cp ${sophya_src}/SophyaLib/SUtils/ppfpio_fmls.h ./include/.
+
+cp ${sophya_src}/SophyaLib/BaseTools/sunitpcst.h ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/pqnumber.h ./src/BaseTools/.
+
+#///////////////////////////////////////////
+#/// SkyMap : //////////////////////////////
+#///////////////////////////////////////////
+find ${sophya_src}/SophyaLib/SkyMap -maxdepth 1 -name '*.cc' -exec /bin/cp {} ./src/SkyMap/. \;
+find ${sophya_src}/SophyaLib/SkyMap -maxdepth 1 -name '*.h'  -exec /bin/cp {} ./include/. \;
+/bin/rm -f ./include/skymapinit.h
+/bin/rm -f ./src/SkyMap/skymapinit.cc
+cp ${sophya_src}/SophyaLib/SysTools/timing.c ./src/SysTools/.
+cp ${sophya_src}/SophyaLib/SysTools/timing.h ./include/.
+
+#cp ${sophya_src}/SophyaLib/Tests/sphg0.cc ./apps/.
+
+#cp ${sophya_src}/SophyaLib/Tests/sph2lm.cc ./apps/.
+
+#cp ${sophya_src}/SophyaLib/NTools/cimage.cc ./src/NTools/.
+#cp ${sophya_src}/SophyaLib/NTools/cimage.h ./include/.
+
+# for sph2asc.cc :
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsspherehealpix.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitsspherehealpix.h ./include/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitstarray.cc ./src/FitsIOServer/.
+cp ${sophya_src}/SophyaExtLibs/FitsIOServer/fitstarray.h ./include/.
+
+#///////////////////////////////////////////
+#/// commands : ////////////////////////////
+#///////////////////////////////////////////
+files="commander cexpre rpneval pdlmgr ctimer zthread"
+for file in ${files} ; do
+  cp ${sophya_src}/SophyaLib/SysTools/${file}.cc ./src/SysTools/.
+  cp ${sophya_src}/SophyaLib/SysTools/${file}.h ./include/.
+done
+cp ${sophya_src}/SophyaLib/SysTools/cmdexecutor.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/srandgen.h ./include/.
+cp ${sophya_src}/SophyaLib/SUtils/strutilxx.cc ./src/SUtils/.
+cp ${sophya_src}/SophyaLib/SUtils/strutilxx.h ./include/.
+
+#///////////////////////////////////////////
+#/// hdf5 : ////////////////////////////////
+#///////////////////////////////////////////
+#exit
+
+find ${sophya_src}/SophyaExtLibs/HDF5IOServer -name '*.h' -exec cp {} ./include/. \;
+find ${sophya_src}/SophyaExtLibs/HDF5IOServer -name '*.cc' -exec cp {} ./src/HDF5IOServer/. \;
+
+/bin/rm -f ./src/HDF5IOServer/th5ios.cc 
+/bin/rm -f ./src/HDF5IOServer/h5sa.cc 
+/bin/rm -f ./src/HDF5IOServer/h5list.cc 
+
+cp ${sophya_src}/SophyaLib/TArray/array.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/bitvector.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tarray.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tmatrix.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tvector.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/matharr.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/fioarr.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/sopemtx.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/arrctcast.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/spesqmtx.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/diagmtx.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/trngmtx.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/symmtx.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/sopmxprod.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/spesqmtx_tsnl.h ./include/.
+cp ${sophya_src}/SophyaLib/TArray/tarrinit.h ./include/.
+
+cp ${sophya_src}/SophyaLib/BaseTools/sophyainit.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/sophyainit.cc ./src/BaseTools/.
+
+cp ${sophya_src}/SophyaLib/BaseTools/randfmt.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/randfmt.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/randtmt32.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/randtmt32.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/randtmt64.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/randtmt64.cc ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/tinymt32.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/tinymt32.c ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/tinymt64.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/tinymt64.c ./src/BaseTools/.
+
+#cp ${sophya_src}/SophyaLib/BaseTools/  ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/fioswppfsegdb.h  ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/ppfwrapstlv.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/dsfmtflags.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/dSFMT.h ./include/.
+cp ${sophya_src}/SophyaLib/BaseTools/dSFMT.c ./src/BaseTools/.
+cp ${sophya_src}/SophyaLib/BaseTools/sversion.h ./include/.
+
+find ${sophya_src}/SophyaLib/BaseTools -name 'dSFMT*.h' -exec cp {} ./include/. \;
+
+#///////////////////////////////////////////
+#/// modified : ////////////////////////////
+#///////////////////////////////////////////
+#exit
+cp ./modified/machdefs.h ./include/.
+
+cp ./modified/fitsinoutfile.cc ./src/FitsIOServer/.
+cp ./modified/fitshistos.cc ./src/FitsIOServer/.
+
+cp ./modified/fitsinoutfile.h ./src/FitsIOServer/.
+cp ./modified/fitsinoutfile.h ./include/.
+
+cp ./modified/fitsfile.h ./src/FitsIOServer/.
+cp ./modified/fitsfile.h ./include/.
+
+cp ./modified/fitsblkrw.h ./include/.
+cp ./modified/fitshandler.h ./include/.
+cp ./modified/fitsarrhand.h ./include/.
+cp ./modified/fitsmanager.h ./include/.
+
+cp ./modified/HEALPixUtils.cc ./src/SkyMap/.
+
+cp ./modified/sunitpcst.h ./src/BaseTools/.
+cp ./modified/sunitpcst.h ./include/.
+
+cp ./modified/tmatrix.cc ./src/TArray/.
+
+cp ./modified/shdf5utils.h ./include/.
+cp ./modified/sophyainit.cc ./src/BaseTools/.
+
+cp ./modified/tinymt32.h ./include/.
+cp ./modified/tinymt64.h ./include/.
+
+mv ./src/BaseTools/tinymt32.c ./src/BaseTools/tinymt32.cc 
+mv ./src/BaseTools/tinymt64.c ./src/BaseTools/tinymt64.cc 
+cp ./modified/cexpre.cc  ./src/SysTools/.

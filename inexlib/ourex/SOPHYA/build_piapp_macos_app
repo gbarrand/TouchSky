@@ -1,0 +1,163 @@
+#!/bin/sh -f
+
+# Copyright (C) 2010, Guy Barrand. All rights reserved.
+# See the file bush.license for terms.
+
+# script adapted from bush/darwin_app to build piapp.app.
+
+app=piapp
+app_exe=spiapp
+build_path=.
+
+if [ "${app_exe}" = "" ] ; then
+  echo "bush/darwin_app : app_exe variable not defined."
+  exit
+fi
+
+if [ "${build_path}" = "" ] ; then
+  echo "bush/darwin_app : build_path variable not defined."
+  exit
+fi
+
+install_name_tool_exe=/usr/bin/install_name_tool
+if [ "`uname -n`" = "MacPro4-2.local" ] ; then install_name_tool_exe=/opt/local/bin/install_name_tool; fi
+
+#//////////////////////////////////////////////////////////////////
+#/// build .app directories : /////////////////////////////////////
+#//////////////////////////////////////////////////////////////////
+/bin/rm -R -f ${build_path}/${app}.app
+
+head=${build_path}/${app}.app/Contents
+/bin/mkdir -p ${head}/MacOS
+/bin/cp ${build_path}/exe/${app_exe} ${head}/MacOS/${app}
+
+/bin/mkdir -p ${head}/Resources
+#darwin_app_res_dir=${head}/Resources
+#/bin/cp -R ./tests/nib.nib ${head}/Resources/${app}.nib
+/bin/cp ./PkgInfo ${head}/PkgInfo
+/bin/cp ./Info.plist ${head}/.
+/bin/cp ./piapp.icns ${head}/Resources/.
+
+#//////////////////////////////////////////////////////////////////
+#/// get dylibs from the exe : ////////////////////////////////////
+#//////////////////////////////////////////////////////////////////
+
+darwin_app_libs_1=
+otool -X -L "${head}/MacOS/${app}" > ./tmp_0
+old_IFS="${IFS}"
+IFS='
+'
+while read line; do   
+  lib="`echo ${line} | awk '{print $1}'`"
+  if [ "`echo ${lib} | sed -e 's#/System##g'`" = "${lib}" ] ; then
+  if [ "`echo ${lib} | sed -e 's#/usr/lib/##g'`" = "${lib}" ] ; then
+    #echo "lib from exe : ${lib}"
+    darwin_app_libs_1="${darwin_app_libs_1} ${lib}"
+  fi    
+  fi    
+done < ./tmp_0
+IFS="${old_IFS}"
+/bin/rm -f ./tmp_0
+
+#//////////////////////////////////////////////////////////////////
+#/// get dylibs from dylibs : /////////////////////////////////////
+#//////////////////////////////////////////////////////////////////
+darwin_app_libs_2="${darwin_app_libs_1}"
+for item in ${darwin_app_libs_1} ; do
+  #echo "/////////////// search lib for : ${item} ..."
+  otool -X -L "${item}" > ./tmp_0
+IFS='
+'
+  while read line; do   
+    lib="`echo ${line} | awk '{print $1}'`"
+    if [ "`echo ${lib} | sed -e 's#/System##g'`" = "${lib}" ] ; then
+    if [ "`echo ${lib} | sed -e 's#/usr/lib/##g'`" = "${lib}" ] ; then
+      #echo ${lib}
+      darwin_app_libs_2="${darwin_app_libs_2} ${lib}"
+    fi    
+    fi    
+  done < ./tmp_0
+  IFS="${old_IFS}"
+  /bin/rm -f ./tmp_0
+done
+
+darwin_app_libs_3="${darwin_app_libs_2}"
+for item in ${darwin_app_libs_2} ; do
+  #echo "/////////////// search lib for : ${item} ..."
+  otool -X -L "${item}" > ./tmp_0
+IFS='
+'
+  while read line; do   
+    lib="`echo ${line} | awk '{print $1}'`"
+    if [ "`echo ${lib} | sed -e 's#/System##g'`" = "${lib}" ] ; then
+    if [ "`echo ${lib} | sed -e 's#/usr/lib/##g'`" = "${lib}" ] ; then
+      #echo ${lib}
+      darwin_app_libs_3="${darwin_app_libs_3} ${lib}"
+    fi    
+    fi    
+  done < ./tmp_0
+  IFS="${old_IFS}"
+  /bin/rm -f ./tmp_0
+done
+
+darwin_app_libs=
+/bin/rm -f ./tmp_1
+for item in ${darwin_app_libs_3} ; do
+  echo ${item} >> ./tmp_1
+done
+sort -u ./tmp_1 > ./tmp_2
+for item in $(cat ./tmp_2) ; do
+  darwin_app_libs="${darwin_app_libs} ${item}"
+done
+/bin/rm -f ./tmp_1 ./tmp_2
+
+#for item in ${darwin_app_libs} ; do
+#  echo "found dylib : ${item}"
+#done
+#exit
+
+#//////////////////////////////////////////////////////////////////
+#/// treat dylibs : ///////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////
+if [ "${darwin_app_libs}" != "" ] ; then
+
+  /bin/mkdir -p ${head}/lib
+
+  for item in ${darwin_app_libs} ; do
+    /bin/cp ${item} ${head}/lib/.
+  done
+
+  # Change the install names of dylibs in the application binary :
+  for item in ${darwin_app_libs} ; do
+    lib_name="`basename ${item}`"
+    old_name="${item}"
+    new_name="@executable_path/../lib/${lib_name}"
+    ${install_name_tool_exe} -change  ${old_name} ${new_name} "${head}/MacOS/${app}"
+  done
+
+  # Change the id of dylibs :  
+  for item in ${darwin_app_libs} ; do
+    lib_name="`basename ${item}`"
+    dot_app="${head}/lib/${lib_name}"
+    new_name="@executable_path/../lib/${lib_name}"
+    chmod u+w "${head}/lib/${lib_name}"
+    ${install_name_tool_exe} -id ${new_name} "${dot_app}"
+  done
+
+  # Change the install names of dylibs in the dylibs :
+  for item in ${darwin_app_libs} ; do
+    lib_name="`basename ${item}`"
+    dot_app="${head}/lib/${lib_name}"
+    for item2 in ${darwin_app_libs} ; do
+      lib_name2="`basename ${item2}`"
+      old_name2="${item2}"
+      new_name2="@executable_path/../lib/${lib_name2}"
+      ${install_name_tool_exe} -change  ${old_name2} ${new_name2} "${dot_app}"
+    done
+  done
+
+  # the below should find nothing !
+  find ${head}/lib -name '*.dylib' -exec otool -L {} \; | grep local
+  
+fi # darwin_app_libs
+

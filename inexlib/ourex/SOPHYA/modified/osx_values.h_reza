@@ -1,0 +1,23 @@
+#ifndef OSX_VALUES_H
+#define OSX_VALUES_H
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+
+#define BITSPERBYTE     8
+#define BITS(type)      (BITSPERBYTE * (long)sizeof (type))
+#define MAXDOUBLE       1.79769313486231570e+308
+#define MINDOUBLE       4.94065645841246544e-324
+#define _IEEE           1
+#define _DEXPLEN        11
+#define _HIDDENBIT      1
+#define DMINEXP (-(DMAXEXP + DSIGNIF - _HIDDENBIT - 3))
+#define DSIGNIF (BITS(double) - _DEXPLEN + _HIDDENBIT - 1)
+#define DMAXEXP ((1 << (_DEXPLEN - 1)) - 1 + _IEEE)
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif
